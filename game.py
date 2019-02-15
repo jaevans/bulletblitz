@@ -1,7 +1,35 @@
 import pgzrun
 import pgzero
+import pgzero.game as game
 import math
 import random
+
+class Camera(object):
+    def __init__(self, pos=(0,0)):
+        self.pos = pos
+
+    @property
+    def x(self):
+        return self._x
+    @x.setter
+    def x(self, x):
+        self._x = x
+    
+    @property
+    def y(self):
+        return self._y
+    
+    @y.setter
+    def y(self, y):
+        self._y = y
+
+    @property
+    def pos(self):
+        return (self._x, self._y)
+    
+    @pos.setter
+    def pos(self, pos):
+        self._x, self._y = pos
 
 class TurtleActor(object):
     def __init__(self, *args, **kwargs):
@@ -34,6 +62,10 @@ class TurtleActor(object):
     def turnright(self, angle):
         self._actor.angle -= angle
 
+    def draw(self, camera):
+        pos = (self.topleft[0] - camera.x, self.topleft[1] - camera.y)
+        game.screen.blit(self._surf, pos)
+
 SPREAD = 5
 
 class BulletActor(TurtleActor):
@@ -52,14 +84,15 @@ class BulletActor(TurtleActor):
 ammosize = '9mm'
 gun = 'mp412'
 
-PlayerActor = Actor('mp412_hold')
-FloorActor = Actor('floor')
+PlayerActor = TurtleActor('mp412_hold')
+FloorActor = TurtleActor('floor')
 Bullet = BulletActor(0)
 
 WIDTH = 750
 HEIGHT = 750
 
 PlayerActor.pos = (WIDTH/2, HEIGHT/2)
+camera = Camera((0,0))
 
 def on_mouse_move(pos):
     PlayerActor.angle = PlayerActor.angle_to(pos)
@@ -76,8 +109,8 @@ def update():
 
 def draw():
     screen.fill('white')
-    FloorActor.draw()
-    PlayerActor.draw()
-    Bullet.draw()
+    FloorActor.draw(camera)
+    PlayerActor.draw(camera)
+    Bullet.draw(camera)
 
 pgzrun.go()
