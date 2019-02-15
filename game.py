@@ -1,11 +1,58 @@
 import pgzrun
 import pgzero
+from pgzero.actor import Actor
+from pgzero.keyboard import keyboard, keys
+import pygame
+import pgzero.game as game
+import pygame.display
 import math
 import random
+
+class Camera(object):
+    def __init__(self, pos=(0,0)):
+        self.pos = pos
+
+    @property
+    def x(self):
+        return self._x
+    @x.setter
+    def x(self, x):
+        self._x = x
+    
+    @property
+    def y(self):
+        return self._y
+    
+    @y.setter
+    def y(self, y):
+        self._y = y
+
+    @property
+    def pos(self):
+        return (self._x, self._y)
+    
+    @pos.setter
+    def pos(self, pos):
+        self._x, self._y = pos
+
+    def screen_to_world(self, world_point):
+        world_x, world_y = world_point
+        screen_x = world_x + self.x - (WIDTH // 2)
+        screen_y = world_y + self.y - (HEIGHT // 2)
+        return (screen_x,screen_y)
+
+    def world_to_screen(self, screen_point):
+        screen_x, screen_y = screen_point
+
+        world_x = screen_x - self.x + (WIDTH // 2)
+        world_y = screen_y - self.y + (HEIGHT // 2)
+        return (world_x, world_y)
 
 class TurtleActor(object):
     def __init__(self, *args, **kwargs):
         self.__dict__['_actor'] = Actor(*args, **kwargs)
+        self.__dict__['camera'] = kwargs['camera']
+        del kwargs['camera']
         
     def __getattr__(self, attr):
         if attr in self.__dict__:
@@ -34,11 +81,15 @@ class TurtleActor(object):
     def turnright(self, angle):
         self._actor.angle -= angle
 
+    def draw(self, camera):
+        screen_pos = self.camera.world_to_screen(self.topleft)
+        game.screen.blit(self._surf, screen_pos)
+
 SPREAD = 5
 
 class BulletActor(TurtleActor):
-    def __init__ (self, angle):
-        super().__init__('9mm_bullet')
+    def __init__ (self, angle, *args, **kwargs):
+        super().__init__('9mm_bullet', *args, **kwargs)
         self.angle = angle + ((random.random()* SPREAD) - SPREAD / 2)
         self.dmg = 1
 
@@ -52,32 +103,45 @@ class BulletActor(TurtleActor):
 ammosize = '9mm'
 gun = 'mp412'
 
-PlayerActor = Actor('mp412_hold')
-FloorActor = Actor('floor')
-Bullet = BulletActor(0)
-
-WIDTH = 750
 HEIGHT = 750
+WIDTH = HEIGHT * 16 // 9
 
-PlayerActor.pos = (WIDTH/2, HEIGHT/2)
+camera = Camera()
+PlayerActor = TurtleActor('mp412_hold', camera=camera)
+FloorActor = TurtleActor('floor', camera=camera)
+Bullet = BulletActor(0, camera=camera)
+
+PlayerActor.pos = (FloorActor.right//2, FloorActor.bottom//2)
+
+print(pygame.display.list_modes())
+info = pygame.display.Info()
+print(info)
+print(pygame.display.get_wm_info())
+
+
 
 def on_mouse_move(pos):
-    PlayerActor.angle = PlayerActor.angle_to(pos)
+    PlayerActor.angle = PlayerActor.angle_to(camera.screen_to_world(pos))
 
 def update():
+    global camera
     if keyboard[keys.W]:
-        FloorActor.y = max(FloorActor.y +5, 0)
+        PlayerActor.y = max(PlayerActor.y - 5, FloorActor.top)
     if keyboard[keys.A]:
-        FloorActor.x = max(FloorActor.x +5, 0)
+        PlayerActor.x = max(PlayerActor.x - 5, FloorActor.left)
     if keyboard[keys.S]:
-        FloorActor.y = FloorActor.y - 5
+        PlayerActor.y = min(PlayerActor.y + 5, FloorActor.bottom)
     if keyboard[keys.D]:
-        FloorActor.x = FloorActor.x - 5
+        PlayerActor.x = min(PlayerActor.x + 5, FloorActor.right)
+
+    # Always move the camera to the location of the player
+    camera.pos = PlayerActor.center
+
 
 def draw():
     screen.fill('white')
-    FloorActor.draw()
-    PlayerActor.draw()
-    Bullet.draw()
+    FloorActor.draw(camera)
+    PlayerActor.draw(camera)
+    Bullet.draw(camera)
 
 pgzrun.go()
