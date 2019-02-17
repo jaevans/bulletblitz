@@ -113,12 +113,6 @@ Bullet = BulletActor(0, camera=camera)
 
 PlayerActor.pos = (FloorActor.right//2, FloorActor.bottom//2)
 
-print(pygame.display.list_modes())
-info = pygame.display.Info()
-print(info)
-print(pygame.display.get_wm_info())
-
-
 
 def on_mouse_move(pos):
     PlayerActor.angle = PlayerActor.angle_to(camera.screen_to_world(pos))
