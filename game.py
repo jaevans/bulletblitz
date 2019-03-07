@@ -1,5 +1,9 @@
 import pgzrun
 import pgzero
+from pgzero.actor import Actor
+from pgzero.keyboard import keyboard
+from pgzero.keyboard import keys
+#from pgzero.game import screen
 import math
 import pgzero.game as game
 import random
@@ -54,16 +58,19 @@ class TurtleActor(object):
         newpos = self.camera.world_to_camera(self.topleft)
         game.screen.blit(self._surf, newpos)
 
-SPREAD = 5
 
 class BulletActor(TurtleActor):
     def __init__ (self, angle, *args, **kwargs):
         super().__init__('9mm_bullet', *args, **kwargs)
-        self.angle = angle + ((random.random()* SPREAD) - SPREAD / 2)
         self.dmg = 1
+        self.speed = 15
+        self.range = 300
+        self.spread = 15
+        self.angle = angle + ((random.random()* self.spread) - self.spread / 2)
+        
 
     def move(self):
-        self.forward(15)
+        self.forward(self.speed)
 
     #def onscreen(self):
        # screenrect = Rect((0,0), (screen.width, screen.height))
@@ -75,7 +82,7 @@ gun = 'mp412'
 camera = Camera()
 PlayerActor = TurtleActor('mp412_hold', camera = camera)
 FloorActor = TurtleActor('floor', camera = camera)
-Bullet = BulletActor(0, camera = camera)
+bullets = []
 
 WIDTH = 750
 HEIGHT = 750
@@ -85,7 +92,12 @@ PlayerActor.pos = (WIDTH/2, HEIGHT/2)
 def on_mouse_move(pos):
     PlayerActor.angle = PlayerActor.angle_to(camera.camera_to_world(pos))
 
+def on_mouse_down(pos):
+    b = BulletActor(PlayerActor.angle, camera = camera, center = PlayerActor.center)
+    bullets.append(b)
+
 def update():
+    global bullets
     if keyboard[keys.W]:
         PlayerActor.y = max(PlayerActor.y - 5, FloorActor.top)
     if keyboard[keys.A]:
@@ -94,13 +106,21 @@ def update():
         PlayerActor.y = min(PlayerActor.y + 5, FloorActor.bottom)
     if keyboard[keys.D]:
         PlayerActor.x = min(PlayerActor.x + 5, FloorActor.right)
+    live_bullets = []
+    for b in bullets:
+        b.move()
+        dist = b.distance_to(PlayerActor.center)
+        if dist < b.range:
+            live_bullets.append(b)
+    bullets = live_bullets
     
     camera.pos = (PlayerActor.x - (WIDTH//2), PlayerActor.y - (HEIGHT//2))
 
 def draw():
     screen.fill('white')
     FloorActor.draw()
+    for b in bullets:
+        b.draw()
     PlayerActor.draw()
-    Bullet.draw()
 
 pgzrun.go()
