@@ -7,6 +7,7 @@ from pgzero.keyboard import keys
 import math
 import pgzero.game as game
 import random
+from guns import *
 
 class Camera(object):
     def __init__(self):
@@ -58,54 +59,61 @@ class TurtleActor(object):
         newpos = self.camera.world_to_camera(self.topleft)
         game.screen.blit(self._surf, newpos)
 
-
 class BulletActor(TurtleActor):
     def __init__ (self, angle, *args, **kwargs):
         super().__init__('9mm_bullet', *args, **kwargs)
-        self.dmg = 1
-        self.speed = 15
-        self.range = 300
-        self.spread = 15
+        self.dmg = PlayerActor.gun.dmg
+        self.velocity = PlayerActor.gun.velocity
+        self.range = PlayerActor.gun.range
+        self.spread = PlayerActor.gun.spread
         self.angle = angle + ((random.random()* self.spread) - self.spread / 2)
         
 
     def move(self):
-        self.forward(self.speed)
+        self.forward(self.velocity)
 
     #def onscreen(self):
        # screenrect = Rect((0,0), (screen.width, screen.height))
        # return screenrect.contains(self._rect)
 
+class PlayerActor(TurtleActor):
+    def __init__ (self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.gun = None
+        
 ammosize = '9mm'
-gun = 'mp412'
 
 camera = Camera()
 PlayerActor = TurtleActor('mp412_hold', camera = camera)
+PlayerActor.gun = MP412()
 FloorActor = TurtleActor('floor', camera = camera)
+CasingActor = TurtleActor('9mm_case', camera = camera)
 bullets = []
 
 WIDTH = 750
 HEIGHT = 750
+SPEED = 7
 
 PlayerActor.pos = (WIDTH/2, HEIGHT/2)
 
 def on_mouse_move(pos):
     PlayerActor.angle = PlayerActor.angle_to(camera.camera_to_world(pos))
 
-def on_mouse_down(pos):
-    b = BulletActor(PlayerActor.angle, camera = camera, center = PlayerActor.center)
-    bullets.append(b)
+def on_mouse_down(pos, button):
+    if button == mouse.LEFT:
+        b = BulletActor(PlayerActor.angle, camera = camera, center = PlayerActor.center)
+        bullets.append(b)
 
 def update():
     global bullets
     if keyboard[keys.W]:
-        PlayerActor.y = max(PlayerActor.y - 5, FloorActor.top)
+        PlayerActor.y = max(PlayerActor.y - SPEED, FloorActor.top)
     if keyboard[keys.A]:
-        PlayerActor.x = max(PlayerActor.x - 5, FloorActor.left)
+        PlayerActor.x = max(PlayerActor.x - SPEED, FloorActor.left)
     if keyboard[keys.S]:
-        PlayerActor.y = min(PlayerActor.y + 5, FloorActor.bottom)
+        PlayerActor.y = min(PlayerActor.y + SPEED, FloorActor.bottom)
     if keyboard[keys.D]:
-        PlayerActor.x = min(PlayerActor.x + 5, FloorActor.right)
+        PlayerActor.x = min(PlayerActor.x + SPEED, FloorActor.right)
     live_bullets = []
     for b in bullets:
         b.move()
