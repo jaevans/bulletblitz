@@ -84,11 +84,13 @@ class PlayerActor(TurtleActor):
 ammosize = '9mm'
 
 camera = Camera()
-PlayerActor = TurtleActor('mp412_hold', camera = camera)
-PlayerActor.gun = MP412()
+PlayerActor = TurtleActor('mp5_hold', camera = camera)
+PlayerActor.gun = MP5()
 FloorActor = TurtleActor('floor', camera = camera)
 CasingActor = TurtleActor('9mm_case', camera = camera)
 bullets = []
+canfire = True 
+triggerheld = False
 
 WIDTH = 750
 HEIGHT = 750
@@ -96,16 +98,26 @@ SPEED = 7
 
 PlayerActor.pos = (WIDTH/2, HEIGHT/2)
 
+def resetfire():
+    global canfire
+    canfire = True
+
 def on_mouse_move(pos):
     PlayerActor.angle = PlayerActor.angle_to(camera.camera_to_world(pos))
 
 def on_mouse_down(pos, button):
-    if button == mouse.LEFT:
-        b = BulletActor(PlayerActor.angle, camera = camera, center = PlayerActor.center)
-        bullets.append(b)
+    global triggerheld
+    triggerheld = True
+
+def on_mouse_up(pos, button):
+    global triggerheld
+    triggerheld = False
 
 def update():
     global bullets
+    global canfire
+    global triggerheld
+
     if keyboard[keys.W]:
         PlayerActor.y = max(PlayerActor.y - SPEED, FloorActor.top)
     if keyboard[keys.A]:
@@ -121,6 +133,14 @@ def update():
         if dist < b.range:
             live_bullets.append(b)
     bullets = live_bullets
+
+    if triggerheld == True and canfire == True:
+        b = BulletActor(PlayerActor.angle, camera = camera, center = PlayerActor.center)
+        bullets.append(b)
+        canfire = False
+        clock.schedule(resetfire, round(60/PlayerActor.gun.rpm, 2))
+
+    PlayerActor.anchor = (PlayerActor.gun.xcenter, PlayerActor.gun.ycenter)
     
     camera.pos = (PlayerActor.x - (WIDTH//2), PlayerActor.y - (HEIGHT//2))
 
