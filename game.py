@@ -91,6 +91,7 @@ CasingActor = TurtleActor('9mm_case', camera = camera)
 bullets = []
 canfire = True 
 triggerheld = False
+canresetfire = True
 
 WIDTH = 750
 HEIGHT = 750
@@ -100,7 +101,18 @@ PlayerActor.pos = (WIDTH/2, HEIGHT/2)
 
 def resetfire():
     global canfire
-    canfire = True
+    global canresetfire
+    if PlayerActor.gun.firemode == 'auto':
+        canfire = True
+        canresetfire = False
+    elif PlayerActor.gun.firemode == 'semi':
+        if triggerheld == False:
+            canfire = True
+            canresetfire = False
+
+def canresetfiretrue():
+    global canresetfire
+    canresetfire = True
 
 def on_mouse_move(pos):
     PlayerActor.angle = PlayerActor.angle_to(camera.camera_to_world(pos))
@@ -117,6 +129,7 @@ def update():
     global bullets
     global canfire
     global triggerheld
+    global canresetfire
 
     if keyboard[keys.W]:
         PlayerActor.y = max(PlayerActor.y - SPEED, FloorActor.top)
@@ -133,15 +146,18 @@ def update():
         if dist < b.range:
             live_bullets.append(b)
     bullets = live_bullets
-
+     
+    if canresetfire == True:
+        resetfire()
+    
     if triggerheld == True and canfire == True:
         b = BulletActor(PlayerActor.angle, camera = camera, center = PlayerActor.center)
         bullets.append(b)
         canfire = False
-        clock.schedule(resetfire, round(60/PlayerActor.gun.rpm, 2))
+        clock.schedule(canresetfiretrue, round(60/PlayerActor.gun.rpm, 2))
 
     PlayerActor.anchor = (PlayerActor.gun.xcenter, PlayerActor.gun.ycenter)
-    
+
     camera.pos = (PlayerActor.x - (WIDTH//2), PlayerActor.y - (HEIGHT//2))
 
 def draw():

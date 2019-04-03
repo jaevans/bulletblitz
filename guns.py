@@ -24,7 +24,7 @@ class MP412 (Gun):
         self.ycenter = 29
         self.firemode = 'semi'
 
-class MP5 (object):
+class MP5 (Gun):
     def __init__(self):
         self.dmg = 8
         self.rpm = 700
