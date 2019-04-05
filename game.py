@@ -84,18 +84,21 @@ class PlayerActor(TurtleActor):
 ammosize = '9mm'
 
 camera = Camera()
-PlayerActor = TurtleActor('mp5_hold', camera = camera)
-PlayerActor.gun = MP5()
+PlayerActor = TurtleActor('mp412_hold', camera = camera)
 FloorActor = TurtleActor('floor', camera = camera)
 CasingActor = TurtleActor('9mm_case', camera = camera)
 bullets = []
 canfire = True 
 triggerheld = False
 canresetfire = True
+PlayerActor.anchor = (23,23)
+Guns = [MP412(), MP5(), Vector()]
+currentgun = 0
+PlayerActor.gun = Guns[currentgun]
 
 WIDTH = 750
 HEIGHT = 750
-SPEED = 7
+SPEED = 10
 
 PlayerActor.pos = (WIDTH/2, HEIGHT/2)
 
@@ -119,7 +122,14 @@ def on_mouse_move(pos):
 
 def on_mouse_down(pos, button):
     global triggerheld
+    global currentgun
     triggerheld = True
+    if button == mouse.WHEEL_DOWN:
+        saveangle = PlayerActor.angle
+        currentgun = (currentgun + 1)%len(Guns)
+        PlayerActor.gun = Guns[currentgun]
+        PlayerActor.image = PlayerActor.gun.image
+        PlayerActor.angle = saveangle
 
 def on_mouse_up(pos, button):
     global triggerheld
@@ -132,14 +142,15 @@ def update():
     global canresetfire
 
     if keyboard[keys.W]:
-        PlayerActor.y = max(PlayerActor.y - SPEED, FloorActor.top)
+        PlayerActor.y = max((PlayerActor.y - SPEED + PlayerActor.gun.holdslow), FloorActor.top)
     if keyboard[keys.A]:
-        PlayerActor.x = max(PlayerActor.x - SPEED, FloorActor.left)
+        PlayerActor.x = max((PlayerActor.x - SPEED + PlayerActor.gun.holdslow), FloorActor.left)
     if keyboard[keys.S]:
-        PlayerActor.y = min(PlayerActor.y + SPEED, FloorActor.bottom)
+        PlayerActor.y = min((PlayerActor.y + SPEED - PlayerActor.gun.holdslow), FloorActor.bottom)
     if keyboard[keys.D]:
-        PlayerActor.x = min(PlayerActor.x + SPEED, FloorActor.right)
+        PlayerActor.x = min((PlayerActor.x + SPEED - PlayerActor.gun.holdslow), FloorActor.right)
     live_bullets = []
+
     for b in bullets:
         b.move()
         dist = b.distance_to(PlayerActor.center)
@@ -155,9 +166,7 @@ def update():
         bullets.append(b)
         canfire = False
         clock.schedule(canresetfiretrue, round(60/PlayerActor.gun.rpm, 2))
-
-    PlayerActor.anchor = (PlayerActor.gun.xcenter, PlayerActor.gun.ycenter)
-
+    
     camera.pos = (PlayerActor.x - (WIDTH//2), PlayerActor.y - (HEIGHT//2))
 
 def draw():
