@@ -46,3 +46,38 @@ class Vector (Gun):
         self.firemode = 'auto'
         self.holdslow = 3
 
+class SV98 (Gun):
+    def __init__(self):
+        self.dmg = 86
+        self.rpm = 20
+        self.spread = 1
+        self.velocity = 45
+        self.range = 625
+        self.image = 'sv98_hold'
+        self.ammo = '7.62'
+        self.firemode = 'semi'
+        self.holdslow = 4
+
+class M249 (Gun):
+    def __init__(self):
+        self.dmg = 9
+        self.rpm = 860
+        self.spread = 20
+        self.velocity = 25
+        self.range = 450
+        self.image = 'm249_hold'
+        self.ammo = '5.56'
+        self.firemode = 'auto'
+        self.holdslow = 6
+
+class AUGa1 (Gun):
+    def __init__(self):
+        self.dmg = 10
+        self.rpm = 750
+        self.spread = 2
+        self.velocity = 26
+        self.range = 600
+        self.image = 'auga1_hold'
+        self.ammo = '5.56'
+        self.firemode = 'auto'
+        self.holdslow = 4

@@ -81,18 +81,27 @@ class PlayerActor(TurtleActor):
         super().__init__(*args, **kwargs)
         self.gun = None
         
+class CasingActor(TurtleActor):
+    def __init__ (self, angle, *args, **kwargs):
+        super().__init__('9mm_case', *args, **kwargs)
+        self.angle = angle
+    
+    def move(self):
+        self.forward(10)
+
 ammosize = '9mm'
 
 camera = Camera()
 PlayerActor = TurtleActor('mp412_hold', camera = camera)
 FloorActor = TurtleActor('floor', camera = camera)
-CasingActor = TurtleActor('9mm_case', camera = camera)
+#CasingActor = TurtleActor('9mm_case', camera = camera)
 bullets = []
+casings = []
 canfire = True 
 triggerheld = False
 canresetfire = True
 PlayerActor.anchor = (23,23)
-Guns = [MP412(), MP5(), Vector()]
+Guns = [MP412(), MP5(), Vector(), SV98(), M249(), AUGa1()]
 currentgun = 0
 PlayerActor.gun = Guns[currentgun]
 
@@ -137,6 +146,7 @@ def on_mouse_up(pos, button):
 
 def update():
     global bullets
+    global casings
     global canfire
     global triggerheld
     global canresetfire
@@ -150,6 +160,7 @@ def update():
     if keyboard[keys.D]:
         PlayerActor.x = min((PlayerActor.x + SPEED - PlayerActor.gun.holdslow), FloorActor.right)
     live_bullets = []
+    live_casings = []
 
     for b in bullets:
         b.move()
@@ -157,6 +168,13 @@ def update():
         if dist < b.range:
             live_bullets.append(b)
     bullets = live_bullets
+
+    for c in casings:
+        dist = c.distance_to(PlayerActor.center)
+        if dist < 100:
+            c.move
+            live_casings.append(c)
+        casings = live_casings
      
     if canresetfire == True:
         resetfire()
@@ -164,6 +182,8 @@ def update():
     if triggerheld == True and canfire == True:
         b = BulletActor(PlayerActor.angle, camera = camera, center = PlayerActor.center)
         bullets.append(b)
+        c = CasingActor(PlayerActor.angle + 90, camera = camera, center = PlayerActor.center)
+        casings.append(c)
         canfire = False
         clock.schedule(canresetfiretrue, round(60/PlayerActor.gun.rpm, 2))
     
@@ -174,6 +194,8 @@ def draw():
     FloorActor.draw()
     for b in bullets:
         b.draw()
+    for c in casings:
+        c.draw()
     PlayerActor.draw()
 
 pgzrun.go()
