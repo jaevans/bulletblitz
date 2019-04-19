@@ -20,7 +20,7 @@ class MP412 (Gun):
         self.image = 'mp412_hold'
         self.ammo = '9mm'
         self.firemode = 'semi'
-        self.holdslow = 1
+        self.holdslow = 4
 
 class MP5 (Gun):
     def __init__(self):
@@ -28,11 +28,11 @@ class MP5 (Gun):
         self.rpm = 700
         self.spread = 10
         self.velocity = 20
-        self.range = 670
+        self.range = 450
         self.image = 'mp5_hold'
         self.ammo = '9mm'
         self.firemode = 'auto'
-        self.holdslow = 2
+        self.holdslow = 5
 
 class Vector (Gun):
     def __init__(self):
@@ -44,7 +44,7 @@ class Vector (Gun):
         self.image = 'vector_hold'
         self.ammo = '9mm'
         self.firemode = 'auto'
-        self.holdslow = 3
+        self.holdslow = 6
 
 class SV98 (Gun):
     def __init__(self):
@@ -56,7 +56,7 @@ class SV98 (Gun):
         self.image = 'sv98_hold'
         self.ammo = '7.62'
         self.firemode = 'semi'
-        self.holdslow = 4
+        self.holdslow = 5
 
 class M249 (Gun):
     def __init__(self):
@@ -64,11 +64,11 @@ class M249 (Gun):
         self.rpm = 860
         self.spread = 20
         self.velocity = 25
-        self.range = 450
+        self.range = 575
         self.image = 'm249_hold'
         self.ammo = '5.56'
         self.firemode = 'auto'
-        self.holdslow = 6
+        self.holdslow = 8
 
 class AUGa1 (Gun):
     def __init__(self):
@@ -80,4 +80,4 @@ class AUGa1 (Gun):
         self.image = 'auga1_hold'
         self.ammo = '5.56'
         self.firemode = 'auto'
-        self.holdslow = 4
+        self.holdslow = 6

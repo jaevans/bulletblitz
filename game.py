@@ -3,7 +3,6 @@ import pgzero
 from pgzero.actor import Actor
 from pgzero.keyboard import keyboard
 from pgzero.keyboard import keys
-#from pgzero.game import screen
 import math
 import pgzero.game as game
 import random
@@ -43,7 +42,6 @@ class TurtleActor(object):
     def forward(self, distance):
         the_angle = math.radians(self._actor.angle)
         self._actor.x += distance * math.cos(the_angle)
-        # We subtract the y as our y gets bigger heading downward
         self._actor.y -= distance * math.sin(the_angle)
         
     def backward(self, distance):
@@ -68,13 +66,8 @@ class BulletActor(TurtleActor):
         self.spread = PlayerActor.gun.spread
         self.angle = angle + ((random.random()* self.spread) - self.spread / 2)
         
-
     def move(self):
         self.forward(self.velocity)
-
-    #def onscreen(self):
-       # screenrect = Rect((0,0), (screen.width, screen.height))
-       # return screenrect.contains(self._rect)
 
 class PlayerActor(TurtleActor):
     def __init__ (self, *args, **kwargs):
@@ -85,6 +78,11 @@ class CasingActor(TurtleActor):
     def __init__ (self, angle, *args, **kwargs):
         super().__init__('9mm_case', *args, **kwargs)
         self.angle = angle
+        self.alive = True
+        self.flying = True
+
+    def killtimer(self):
+        self.alive = False
     
     def move(self):
         self.forward(10)
@@ -94,7 +92,6 @@ ammosize = '9mm'
 camera = Camera()
 PlayerActor = TurtleActor('mp412_hold', camera = camera)
 FloorActor = TurtleActor('floor', camera = camera)
-#CasingActor = TurtleActor('9mm_case', camera = camera)
 bullets = []
 casings = []
 canfire = True 
@@ -105,9 +102,9 @@ Guns = [MP412(), MP5(), Vector(), SV98(), M249(), AUGa1()]
 currentgun = 0
 PlayerActor.gun = Guns[currentgun]
 
-WIDTH = 750
-HEIGHT = 750
-SPEED = 10
+WIDTH = 1000
+HEIGHT = 1000
+SPEED = 15
 
 PlayerActor.pos = (WIDTH/2, HEIGHT/2)
 
@@ -133,12 +130,21 @@ def on_mouse_down(pos, button):
     global triggerheld
     global currentgun
     triggerheld = True
+  
     if button == mouse.WHEEL_DOWN:
         saveangle = PlayerActor.angle
         currentgun = (currentgun + 1)%len(Guns)
         PlayerActor.gun = Guns[currentgun]
         PlayerActor.image = PlayerActor.gun.image
         PlayerActor.angle = saveangle
+   
+    if button == mouse.WHEEL_UP:
+        saveangle = PlayerActor.angle
+        currentgun = (currentgun - 1)%len(Guns)
+        PlayerActor.gun = Guns[currentgun]
+        PlayerActor.image = PlayerActor.gun.image
+        PlayerActor.angle = saveangle
+
 
 def on_mouse_up(pos, button):
     global triggerheld
@@ -171,18 +177,41 @@ def update():
 
     for c in casings:
         dist = c.distance_to(PlayerActor.center)
-        if dist < 100:
-            c.move
+        if c.alive:
             live_casings.append(c)
+        if dist < 100 and c.flying:
+            c.move()
+        else:
+            clock.schedule(c.killtimer, 15)
+            c.flying = False
         casings = live_casings
      
     if canresetfire == True:
         resetfire()
-    
+  
     if triggerheld == True and canfire == True:
-        b = BulletActor(PlayerActor.angle, camera = camera, center = PlayerActor.center)
+        d = PlayerActor._orig_surf.get_size()[0]
+        the_angle = math.radians(PlayerActor.angle)
+        x = d * math.cos(the_angle)
+        y = -d * math.sin(the_angle)
+        m = ((PlayerActor.x + x), (PlayerActor.y + y))
+       
+        b = BulletActor(PlayerActor.angle, camera = camera, center = m)
         bullets.append(b)
-        c = CasingActor(PlayerActor.angle + 90, camera = camera, center = PlayerActor.center)
+        
+        d = 30
+        the_angle = math.radians(PlayerActor.angle)
+        x = d * math.cos(the_angle)
+        y = -d * math.sin(the_angle)
+        p = ((PlayerActor.x + x), (PlayerActor.y + y))
+
+        d = 5 + random.randint(0,20)
+        the_angle = math.radians(PlayerActor.angle + 90)
+        x = d * math.cos(the_angle)
+        y = -d * math.sin(the_angle)
+        m = ((x + p[0]), (y + p[1]))
+        
+        c = CasingActor(PlayerActor.angle + 90, camera = camera, center = m)
         casings.append(c)
         canfire = False
         clock.schedule(canresetfiretrue, round(60/PlayerActor.gun.rpm, 2))
