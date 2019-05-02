@@ -1,5 +1,6 @@
 import pgzrun
 import pgzero
+import ptext
 from pgzero.actor import Actor
 from pgzero.keyboard import keyboard
 from pgzero.keyboard import keys
@@ -83,6 +84,9 @@ class CasingActor(TurtleActor):
 
     def killtimer(self):
         self.alive = False
+
+    def stopfly(self):
+        self.flying = False
     
     def move(self):
         self.forward(10)
@@ -102,8 +106,8 @@ Guns = [MP412(), MP5(), Vector(), SV98(), M249(), AUGa1()]
 currentgun = 0
 PlayerActor.gun = Guns[currentgun]
 
-WIDTH = 1000
-HEIGHT = 1000
+WIDTH = 750
+HEIGHT = 750
 SPEED = 15
 
 PlayerActor.pos = (WIDTH/2, HEIGHT/2)
@@ -133,22 +137,36 @@ def on_mouse_down(pos, button):
   
     if button == mouse.WHEEL_DOWN:
         saveangle = PlayerActor.angle
+        clock.unschedule(PlayerActor.gun.doreload)
+        PlayerActor.gun.reloadscheduled = False
         currentgun = (currentgun + 1)%len(Guns)
         PlayerActor.gun = Guns[currentgun]
         PlayerActor.image = PlayerActor.gun.image
         PlayerActor.angle = saveangle
+        if PlayerActor.gun.ammo == 0:
+           clock.schedule(PlayerActor.gun.doreload, PlayerActor.gun.reload)
+
    
     if button == mouse.WHEEL_UP:
         saveangle = PlayerActor.angle
+        clock.unschedule(PlayerActor.gun.doreload)
+        PlayerActor.gun.reloadscheduled = False
         currentgun = (currentgun - 1)%len(Guns)
         PlayerActor.gun = Guns[currentgun]
         PlayerActor.image = PlayerActor.gun.image
         PlayerActor.angle = saveangle
+        if PlayerActor.gun.ammo == 0:
+           clock.schedule(PlayerActor.gun.doreload, PlayerActor.gun.reload)
 
 
 def on_mouse_up(pos, button):
     global triggerheld
     triggerheld = False
+
+def on_key_down(key, mod, unicode):
+    if key == keys.R and PlayerActor.gun.reloadscheduled == False:
+        PlayerActor.gun.reloadscheduled = True
+        clock.schedule(PlayerActor.gun.doreload, PlayerActor.gun.reload)
 
 def update():
     global bullets
@@ -176,20 +194,23 @@ def update():
     bullets = live_bullets
 
     for c in casings:
-        dist = c.distance_to(PlayerActor.center)
+        clock.schedule(c.stopfly, (random.randint(0,50)/1000) + .075)
         if c.alive:
             live_casings.append(c)
-        if dist < 100 and c.flying:
+        if c.flying:
             c.move()
         else:
             clock.schedule(c.killtimer, 15)
-            c.flying = False
         casings = live_casings
      
     if canresetfire == True:
         resetfire()
   
-    if triggerheld == True and canfire == True:
+    if triggerheld == True and canfire == True and PlayerActor.gun.ammo > 0:
+        PlayerActor.gun.ammo -= 1
+        if PlayerActor.gun.ammo == 0:
+           clock.schedule(PlayerActor.gun.doreload, PlayerActor.gun.reload)
+
         d = PlayerActor._orig_surf.get_size()[0]
         the_angle = math.radians(PlayerActor.angle)
         x = d * math.cos(the_angle)
@@ -206,12 +227,12 @@ def update():
         p = ((PlayerActor.x + x), (PlayerActor.y + y))
 
         d = 5 + random.randint(0,20)
-        the_angle = math.radians(PlayerActor.angle + 90)
+        the_angle = math.radians(PlayerActor.angle - 90)
         x = d * math.cos(the_angle)
         y = -d * math.sin(the_angle)
         m = ((x + p[0]), (y + p[1]))
         
-        c = CasingActor(PlayerActor.angle + 90, camera = camera, center = m)
+        c = CasingActor(PlayerActor.angle -90 + random.randint(-2,2), camera = camera, center = m)
         casings.append(c)
         canfire = False
         clock.schedule(canresetfiretrue, round(60/PlayerActor.gun.rpm, 2))
@@ -226,5 +247,6 @@ def draw():
     for c in casings:
         c.draw()
     PlayerActor.draw()
+    ptext.draw(str(PlayerActor.gun.ammo), center = (50, HEIGHT-50), color = '#767676' ) 
 
 pgzrun.go()
