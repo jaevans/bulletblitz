@@ -1,4 +1,6 @@
 import pgzrun
+import pygame
+import pygame.draw
 import pgzero
 import ptext
 from pgzero.actor import Actor
@@ -205,11 +207,13 @@ def update():
      
     if canresetfire == True:
         resetfire()
+
+    if PlayerActor.gun.ammo == 0 and PlayerActor.gun.reloadscheduled == False:
+            PlayerActor.gun.reloadscheduled = True
+            clock.schedule(PlayerActor.gun.doreload, PlayerActor.gun.reload)
   
     if triggerheld == True and canfire == True and PlayerActor.gun.ammo > 0:
         PlayerActor.gun.ammo -= 1
-        if PlayerActor.gun.ammo == 0:
-           clock.schedule(PlayerActor.gun.doreload, PlayerActor.gun.reload)
 
         d = PlayerActor._orig_surf.get_size()[0]
         the_angle = math.radians(PlayerActor.angle)
@@ -247,6 +251,11 @@ def draw():
     for c in casings:
         c.draw()
     PlayerActor.draw()
-    ptext.draw(str(PlayerActor.gun.ammo), center = (50, HEIGHT-50), color = '#767676' ) 
+    pygame.draw.rect(screen.surface, pygame.Color('#116d5d'), Rect(0, HEIGHT-75, 75, 75))
+    if PlayerActor.gun.reloadscheduled == False:
+        ptext.draw(str(PlayerActor.gun.ammo), center = (35, HEIGHT-25), color = '#c5c5c5', fontsize = 20 ) 
+    else:
+        ptext.draw('Reloading', center = (35, HEIGHT-25), color = '#c5c5c5', fontsize = 20) 
+    ptext.draw('Ammo', center = (35, HEIGHT-50), color = '#c5c5c5', fontsize = 20 )
 
 pgzrun.go()
