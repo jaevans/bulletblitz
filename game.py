@@ -93,6 +93,10 @@ class CasingActor(TurtleActor):
     def move(self):
         self.forward(10)
 
+class AmmoActor(TurtleActor):
+    def __init__ (self, *args, **kwargs):
+        super().__init__('ammo_pickup', *args, **kwargs) 
+
 ammosize = '9mm'
 
 camera = Camera()
@@ -107,6 +111,7 @@ PlayerActor.anchor = (23,23)
 Guns = [MP412(), MP5(), Vector(), SV98(), M249(), AUGa1()]
 currentgun = 0
 PlayerActor.gun = Guns[currentgun]
+pickup = None
 
 WIDTH = 750
 HEIGHT = 750
@@ -160,15 +165,23 @@ def on_mouse_down(pos, button):
         if PlayerActor.gun.ammo == 0:
            clock.schedule(PlayerActor.gun.doreload, PlayerActor.gun.reload)
 
-
 def on_mouse_up(pos, button):
     global triggerheld
     triggerheld = False
 
 def on_key_down(key, mod, unicode):
-    if key == keys.R and PlayerActor.gun.reloadscheduled == False:
+    if key == keys.R and PlayerActor.gun.reloadscheduled == False and not PlayerActor.gun.reserve == 0:
         PlayerActor.gun.reloadscheduled = True
         clock.schedule(PlayerActor.gun.doreload, PlayerActor.gun.reload)
+    if key == keys.P:
+        createpickup
+
+def createpickup():
+    global pickup
+    pickup = AmmoActor(camera = camera)
+    print(pickup.center)
+    clock.schedule(createpickup, random.randint(5,15))
+    pickup.center = (random.randint((FloorActor.topleft, FloorActor.topright), random.randint((FloorActor.topleft, FloorActor.bottomleft))))
 
 def update():
     global bullets
@@ -176,6 +189,11 @@ def update():
     global canfire
     global triggerheld
     global canresetfire
+    global pickup
+
+    if pickup is not None and pickup.distance_to(PlayerActor.center) < 64:
+        pickup = None
+        PlayerActor.gun.reserve += random.randint(round(PlayerActor.gun.capacity * 1.5), PlayerActor.gun.capacity * 3)
 
     if keyboard[keys.W]:
         PlayerActor.y = max((PlayerActor.y - SPEED + PlayerActor.gun.holdslow), FloorActor.top)
@@ -251,11 +269,18 @@ def draw():
     for c in casings:
         c.draw()
     PlayerActor.draw()
+    if not pickup == None:
+        pickup.draw()
     pygame.draw.rect(screen.surface, pygame.Color('#116d5d'), Rect(0, HEIGHT-75, 75, 75))
     if PlayerActor.gun.reloadscheduled == False:
-        ptext.draw(str(PlayerActor.gun.ammo), center = (35, HEIGHT-25), color = '#c5c5c5', fontsize = 20 ) 
-    else:
+        ptext.draw(str(PlayerActor.gun.ammo), center = (35, HEIGHT-25), color = '#c5c5c5', fontsize = 20) 
+    elif PlayerActor.gun.reserve > 0:
         ptext.draw('Reloading', center = (35, HEIGHT-25), color = '#c5c5c5', fontsize = 20) 
+    elif PlayerActor.gun.reserve == 0:
+        ptext.draw('0', center = (35, HEIGHT-25), color = '#c5c5c5', fontsize = 20) 
     ptext.draw('Ammo', center = (35, HEIGHT-50), color = '#c5c5c5', fontsize = 20 )
+    ptext.draw(str(PlayerActor.gun.reserve), center = (75, HEIGHT-50), color = '#000000', fontsize = 20 )
+
+clock.schedule(createpickup, 1)
 
 pgzrun.go()

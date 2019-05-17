@@ -13,9 +13,16 @@ class Gun (object):
         self.firemode = None
         self.holdslow = None
         self.reloadscheduled = False
+        self.reserve = 100
 
     def doreload(self):
-        self.ammo = self.capacity
+        if self.capacity <= self.reserve:
+            self.reserve -= self.capacity - self.ammo
+            self.ammo = self.capacity
+        
+        else:
+            self.ammo = self.reserve
+            self.reserve = 0
         self.reloadscheduled = False
 
 class MP412 (Gun):
