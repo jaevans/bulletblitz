@@ -97,6 +97,10 @@ class AmmoActor(TurtleActor):
     def __init__ (self, *args, **kwargs):
         super().__init__('ammo_pickup', *args, **kwargs) 
 
+class EnemyActor(TurtleActor):
+    def __init__ (self, etype = None, *args, **kwargs):
+        super().__init__('zombie_1', *args, **kwargs)
+
 ammosize = '9mm'
 
 camera = Camera()
@@ -104,6 +108,7 @@ PlayerActor = TurtleActor('mp412_hold', camera = camera)
 FloorActor = TurtleActor('floor', camera = camera)
 bullets = []
 casings = []
+enemies = []
 canfire = True 
 triggerheld = False
 canresetfire = True
@@ -112,6 +117,7 @@ Guns = [MP412(), MP5(), Vector(), SV98(), M249(), AUGa1()]
 currentgun = 0
 PlayerActor.gun = Guns[currentgun]
 pickup = None
+enemy = None
 
 WIDTH = 750
 HEIGHT = 750
@@ -179,9 +185,13 @@ def on_key_down(key, mod, unicode):
 def createpickup():
     global pickup
     pickup = AmmoActor(camera = camera)
-    print(pickup.center)
     clock.schedule(createpickup, random.randint(5,15))
-    pickup.center = (random.randint((FloorActor.topleft, FloorActor.topright), random.randint((FloorActor.topleft, FloorActor.bottomleft))))
+    pickup.center = (random.randint(10, (FloorActor.width - 10) + FloorActor.left), random.randint(10, (FloorActor.height - 10) + FloorActor.top))
+
+def createenemy():
+    global enemy
+    enemy = EnemyActor(camera = camera)
+    enemy.center = (random.randint(10, (FloorActor.width - 10) + FloorActor.left), random.randint(10, (FloorActor.height - 10) + FloorActor.top))
 
 def update():
     global bullets
@@ -192,8 +202,10 @@ def update():
     global pickup
 
     if pickup is not None and pickup.distance_to(PlayerActor.center) < 64:
-        pickup = None
-        PlayerActor.gun.reserve += random.randint(round(PlayerActor.gun.capacity * 1.5), PlayerActor.gun.capacity * 3)
+        if not PlayerActor.gun.__class__ == MP412:
+            if PlayerActor.gun.reserve < PlayerActor.gun.reservecap:
+                pickup = None
+                PlayerActor.gun.reserve += random.randint(round(PlayerActor.gun.capacity * 1.5), PlayerActor.gun.capacity * 3)
 
     if keyboard[keys.W]:
         PlayerActor.y = max((PlayerActor.y - SPEED + PlayerActor.gun.holdslow), FloorActor.top)
@@ -205,6 +217,18 @@ def update():
         PlayerActor.x = min((PlayerActor.x + SPEED - PlayerActor.gun.holdslow), FloorActor.right)
     live_bullets = []
     live_casings = []
+    live_enemies = []
+
+    if enemy is not None:
+        angleto = enemy.angle_to(camera.world_to_camera(PlayerActor.center))
+        print(angleto)
+        enemy.angle = (angleto)
+        enemy.forward(10)
+        # print(enemy.angle_to(PlayerActor.center)+enemy.angle)
+        # if (enemy.angle_to(PlayerActor.center) + enemy.angle) % 360 > 5:
+        #    enemy.angle += 3
+        # elif (enemy.angle_to(PlayerActor.center)  + enemy.angle) % 360 < -5:
+        #    enemy.angle -= 3
 
     for b in bullets:
         b.move()
@@ -259,6 +283,10 @@ def update():
         canfire = False
         clock.schedule(canresetfiretrue, round(60/PlayerActor.gun.rpm, 2))
     
+    if (not PlayerActor.gun.__class__ == MP412):
+        if PlayerActor.gun.reserve > PlayerActor.gun.reservecap:
+            PlayerActor.gun.reserve = PlayerActor.gun.reservecap
+
     camera.pos = (PlayerActor.x - (WIDTH//2), PlayerActor.y - (HEIGHT//2))
 
 def draw():
@@ -268,19 +296,26 @@ def draw():
         b.draw()
     for c in casings:
         c.draw()
-    PlayerActor.draw()
     if not pickup == None:
         pickup.draw()
-    pygame.draw.rect(screen.surface, pygame.Color('#116d5d'), Rect(0, HEIGHT-75, 75, 75))
+    if not enemy == None:
+        enemy.draw()
+    pygame.draw.rect(screen.surface, pygame.Color('#116d5d'), Rect(0, HEIGHT-75, 120, 75))
     if PlayerActor.gun.reloadscheduled == False:
         ptext.draw(str(PlayerActor.gun.ammo), center = (35, HEIGHT-25), color = '#c5c5c5', fontsize = 20) 
     elif PlayerActor.gun.reserve > 0:
         ptext.draw('Reloading', center = (35, HEIGHT-25), color = '#c5c5c5', fontsize = 20) 
     elif PlayerActor.gun.reserve == 0:
-        ptext.draw('0', center = (35, HEIGHT-25), color = '#c5c5c5', fontsize = 20) 
+        ptext.draw('0', center = (35, HEIGHT-25), color = '#c5c5c5', fontsize = 20)
     ptext.draw('Ammo', center = (35, HEIGHT-50), color = '#c5c5c5', fontsize = 20 )
-    ptext.draw(str(PlayerActor.gun.reserve), center = (75, HEIGHT-50), color = '#000000', fontsize = 20 )
+    ptext.draw('Reserve', center = (90, HEIGHT-50), color = '#c5c5c5', fontsize = 20)
+    if PlayerActor.gun.__class__ == MP412:
+        ptext.draw('Inf.', center = (90, HEIGHT-25), color = '#c5c5c5', fontsize = 20 )
+    else: 
+        ptext.draw(str(PlayerActor.gun.reserve), center = (90, HEIGHT-25), color = '#c5c5c5', fontsize = 20 )
+    PlayerActor.draw()
 
 clock.schedule(createpickup, 1)
+clock.schedule(createenemy, random.randint(1,2))
 
 pgzrun.go()

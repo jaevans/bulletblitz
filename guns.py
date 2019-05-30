@@ -13,33 +13,38 @@ class Gun (object):
         self.firemode = None
         self.holdslow = None
         self.reloadscheduled = False
-        self.reserve = 100
+        self.reserve = None
+        self.reservecap = None
 
     def doreload(self):
-        if self.capacity <= self.reserve:
-            self.reserve -= self.capacity - self.ammo
+        if self.__class__ == MP412:
             self.ammo = self.capacity
-        
         else:
-            self.ammo = self.reserve
-            self.reserve = 0
+            if self.capacity <= self.reserve:
+                self.reserve -= self.capacity - self.ammo
+                self.ammo = self.capacity
+        
+            else:
+                self.ammo = self.reserve
+                self.reserve = 0
         self.reloadscheduled = False
 
 class MP412 (Gun):
     def __init__(self):
         super().__init__()
         self.dmg = 16
-        self.rpm = 90
+        self.rpm = 120
         self.spread = 5
         self.velocity = 20
         self.range = 450
         self.capacity = 6
         self.ammo = self.capacity
-        self.reload = 3.75
+        self.reload = 2.25
         self.image = 'mp412_hold'
         self.ammosize = '9mm'
         self.firemode = 'semi'
         self.holdslow = 4
+        self.reserve = 1
 
 class MP5 (Gun):
     def __init__(self):
@@ -56,6 +61,8 @@ class MP5 (Gun):
         self.ammosize = '9mm'
         self.firemode = 'auto'
         self.holdslow = 5
+        self.reserve = 90
+        self.reservecap = 300
 
 class Vector (Gun):
     def __init__(self):
@@ -72,6 +79,8 @@ class Vector (Gun):
         self.ammosize = '9mm'
         self.firemode = 'auto'
         self.holdslow = 6
+        self.reserve = 99
+        self.reservecap = 330
 
 class SV98 (Gun):
     def __init__(self):
@@ -88,6 +97,8 @@ class SV98 (Gun):
         self.ammosize = '7.62'
         self.firemode = 'semi'
         self.holdslow = 5
+        self.reserve = 30
+        self.reservecap = 90
 
 class M249 (Gun):
     def __init__(self):
@@ -104,6 +115,8 @@ class M249 (Gun):
         self.ammosize = '5.56'
         self.firemode = 'auto'
         self.holdslow = 8
+        self.reserve = 300
+        self.reservecap = 600
 
 class AUGa1 (Gun):
     def __init__(self):
@@ -120,3 +133,5 @@ class AUGa1 (Gun):
         self.ammosize = '5.56'
         self.firemode = 'auto'
         self.holdslow = 6
+        self.reserve = 160
+        self.reservecap = 480
