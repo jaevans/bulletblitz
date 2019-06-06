@@ -11,6 +11,12 @@ import pgzero.game as game
 import random
 from guns import *
 
+def dot(A, B):
+    return A[0] * B[0] + A[1] * B[1]
+
+def magnitude(A):
+    return math.sqrt(dot(A, A))
+
 class Camera(object):
     def __init__(self):
         self.pos = (0,0)
@@ -60,6 +66,21 @@ class TurtleActor(object):
         newpos = self.camera.world_to_camera(self.topleft)
         game.screen.blit(self._surf, newpos)
 
+    def angleto(self, p):
+        the_angle = math.radians(self._actor.angle)
+        A = (self._actor.x + math.cos(the_angle), self._actor.y - math.sin(the_angle))
+        #print(A)
+        # B = ((self._actor.x + p[0]), (self._actor.y + p[1]))
+        B = ((p[0]), (p[1]))
+        #print(B)
+        d = dot(A,B)
+        m_a = magnitude(A)
+        m_b = magnitude(B)
+        print("d = %r, m_a = %r, m_b = %r" % (d, m_a, m_b))
+        ret = math.degrees(math.acos(dot(A,B) / (magnitude(A) * magnitude(B))))
+        #print(ret)
+        return ret
+        
 class BulletActor(TurtleActor):
     def __init__ (self, angle, *args, **kwargs):
         super().__init__('9mm_bullet', *args, **kwargs)
@@ -100,6 +121,7 @@ class AmmoActor(TurtleActor):
 class EnemyActor(TurtleActor):
     def __init__ (self, etype = None, *args, **kwargs):
         super().__init__('zombie_1', *args, **kwargs)
+        self.hp = 100
 
 ammosize = '9mm'
 
@@ -180,7 +202,7 @@ def on_key_down(key, mod, unicode):
         PlayerActor.gun.reloadscheduled = True
         clock.schedule(PlayerActor.gun.doreload, PlayerActor.gun.reload)
     if key == keys.P:
-        createpickup
+        createpickup()
 
 def createpickup():
     global pickup
@@ -189,9 +211,10 @@ def createpickup():
     pickup.center = (random.randint(10, (FloorActor.width - 10) + FloorActor.left), random.randint(10, (FloorActor.height - 10) + FloorActor.top))
 
 def createenemy():
-    global enemy
     enemy = EnemyActor(camera = camera)
+    clock.schedule(createpickup, random.randint(5,15))
     enemy.center = (random.randint(10, (FloorActor.width - 10) + FloorActor.left), random.randint(10, (FloorActor.height - 10) + FloorActor.top))
+    enemies.append(e)
 
 def update():
     global bullets
@@ -219,11 +242,11 @@ def update():
     live_casings = []
     live_enemies = []
 
-    if enemy is not None:
-        angleto = enemy.angle_to(camera.world_to_camera(PlayerActor.center))
-        print(angleto)
+    for e in enemies:
+        angleto = enemy.angleto(PlayerActor.center)
+        #print(angleto)
         enemy.angle = (angleto)
-        enemy.forward(10)
+        #enemy.forward(10)
         # print(enemy.angle_to(PlayerActor.center)+enemy.angle)
         # if (enemy.angle_to(PlayerActor.center) + enemy.angle) % 360 > 5:
         #    enemy.angle += 3
@@ -235,6 +258,10 @@ def update():
         dist = b.distance_to(PlayerActor.center)
         if dist < b.range:
             live_bullets.append(b)
+        for e in enemies:
+            dist = b.distance_to(e.center)
+            if dist < 23:
+                
     bullets = live_bullets
 
     for c in casings:
