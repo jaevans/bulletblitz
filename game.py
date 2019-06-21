@@ -135,11 +135,12 @@ canfire = True
 triggerheld = False
 canresetfire = True
 PlayerActor.anchor = (23,23)
-Guns = [MP412(), MP5(), Vector(), SV98(), M249(), AUGa1()]
+Guns = [MP412(), MP5(), Vector(), SV98(), M249(), AUG_A1(), M870()]
 currentgun = 0
 PlayerActor.gun = Guns[currentgun]
 pickup = None
 enemy = None
+frames = 0
 
 WIDTH = 750
 HEIGHT = 750
@@ -212,17 +213,21 @@ def createpickup():
 
 def createenemy():
     enemy = EnemyActor(camera = camera)
-    clock.schedule(createpickup, random.randint(5,15))
+    clock.schedule(createenemy, random.randint(5,15))
     enemy.center = (random.randint(10, (FloorActor.width - 10) + FloorActor.left), random.randint(10, (FloorActor.height - 10) + FloorActor.top))
-    enemies.append(e)
+    enemies.append(enemy)
 
 def update():
     global bullets
     global casings
+    global enemies
     global canfire
     global triggerheld
     global canresetfire
     global pickup
+    global frames
+    
+    frames += 1
 
     if pickup is not None and pickup.distance_to(PlayerActor.center) < 64:
         if not PlayerActor.gun.__class__ == MP412:
@@ -243,25 +248,33 @@ def update():
     live_enemies = []
 
     for e in enemies:
-        angleto = enemy.angleto(PlayerActor.center)
-        #print(angleto)
-        enemy.angle = (angleto)
-        #enemy.forward(10)
-        # print(enemy.angle_to(PlayerActor.center)+enemy.angle)
-        # if (enemy.angle_to(PlayerActor.center) + enemy.angle) % 360 > 5:
-        #    enemy.angle += 3
-        # elif (enemy.angle_to(PlayerActor.center)  + enemy.angle) % 360 < -5:
-        #    enemy.angle -= 3
+        degs = e.angle_to(PlayerActor.pos)
+        degs = (360 + (degs - e.angle)) % 360
+        if degs > 10:
+            if degs >180:
+                e.angle -= 5
+            elif degs <180:
+                e.angle += 5
+        if e.hp > 1:
+            live_enemies.append(e)
+        if e.distance_to(PlayerActor.center) > 75:
+            e.forward(2)
+        #if frames % 10 == 0:
+            #e.forward(3)   
+        #else:
+            #e.forward(1)
+    enemies = live_enemies
 
     for b in bullets:
         b.move()
         dist = b.distance_to(PlayerActor.center)
-        if dist < b.range:
-            live_bullets.append(b)
         for e in enemies:
             dist = b.distance_to(e.center)
-            if dist < 23:
-                
+            if dist < 24:
+                e.hp -= PlayerActor.gun.dmg
+            elif dist < b.range:
+                live_bullets.append(b)
+       
     bullets = live_bullets
 
     for c in casings:
@@ -325,9 +338,7 @@ def draw():
         c.draw()
     if not pickup == None:
         pickup.draw()
-    if not enemy == None:
-        enemy.draw()
-    pygame.draw.rect(screen.surface, pygame.Color('#116d5d'), Rect(0, HEIGHT-75, 120, 75))
+    pygame.draw.rect(screen.surface, pygame.Color('#116d5d'), Rect(0, HEIGHT-100, 120, 100))
     if PlayerActor.gun.reloadscheduled == False:
         ptext.draw(str(PlayerActor.gun.ammo), center = (35, HEIGHT-25), color = '#c5c5c5', fontsize = 20) 
     elif PlayerActor.gun.reserve > 0:
@@ -337,10 +348,13 @@ def draw():
     ptext.draw('Ammo', center = (35, HEIGHT-50), color = '#c5c5c5', fontsize = 20 )
     ptext.draw('Reserve', center = (90, HEIGHT-50), color = '#c5c5c5', fontsize = 20)
     if PlayerActor.gun.__class__ == MP412:
-        ptext.draw('Inf.', center = (90, HEIGHT-25), color = '#c5c5c5', fontsize = 20 )
+        ptext.draw('Inf.', center = (90, HEIGHT-25), color = '#c5c5c5', fontsize = 20)
     else: 
-        ptext.draw(str(PlayerActor.gun.reserve), center = (90, HEIGHT-25), color = '#c5c5c5', fontsize = 20 )
+        ptext.draw(str(PlayerActor.gun.reserve), center = (90, HEIGHT-25), color = '#c5c5c5', fontsize = 20)
+    ptext.draw((str(PlayerActor.gun.__class__.__name__)).replace('_', ' '), center = (55, HEIGHT-75), color = '#c5c5c5', fontsize = 20)
     PlayerActor.draw()
+    for e in enemies:
+        e.draw()
 
 clock.schedule(createpickup, 1)
 clock.schedule(createenemy, random.randint(1,2))

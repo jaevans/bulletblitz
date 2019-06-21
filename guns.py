@@ -118,7 +118,7 @@ class M249 (Gun):
         self.reserve = 300
         self.reservecap = 600
 
-class AUGa1 (Gun):
+class AUG_A1 (Gun):
     def __init__(self):
         super().__init__()
         self.dmg = 10
@@ -135,3 +135,21 @@ class AUGa1 (Gun):
         self.holdslow = 6
         self.reserve = 160
         self.reservecap = 480
+
+class M870 (Gun):
+    def __init__(self):
+        super().__init__()
+        self.dmg = 5
+        self.rpm = 30
+        self.spread = 15
+        self.velocity = 26
+        self.range = 210
+        self.capacity = 5
+        self.ammo = self.capacity
+        self.reload = 2.7
+        self.image = 'm870_hold'
+        self.ammosize = '12g'
+        self.firemode = 'semi'
+        self.holdslow = 6
+        self.reserve = 20
+        self.reservecap = 100
