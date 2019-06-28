@@ -1,3 +1,7 @@
+import math
+import random
+from actors import BulletActor, CasingActor
+
 class Gun (object):
     def __init__(self):
         self.dmg = None
@@ -9,12 +13,43 @@ class Gun (object):
         self.ammo = None
         self.reload = None
         self.image = None
+        self.bulletimage = 'bullet'
+        self.caseimage = 'case'
         self.ammosize = None
         self.firemode = None
         self.holdslow = None
         self.reloadscheduled = False
         self.reserve = None
         self.reservecap = None
+
+    def fire(self, PlayerActor):
+        self.ammo -= 1
+        
+        d = PlayerActor._orig_surf.get_size()[0]
+        the_angle = math.radians(PlayerActor.angle)
+        x = d * math.cos(the_angle)
+        y = -d * math.sin(the_angle)
+        m = ((PlayerActor.x + x), (PlayerActor.y + y))
+       
+        b = BulletActor(self, PlayerActor.angle, camera = PlayerActor.camera, center = m)
+        #bullets.append(b)
+        
+        d = 30
+        the_angle = math.radians(PlayerActor.angle)
+        x = d * math.cos(the_angle)
+        y = -d * math.sin(the_angle)
+        p = ((PlayerActor.x + x), (PlayerActor.y + y))
+
+        d = 5 + random.randint(0,20)
+        the_angle = math.radians(PlayerActor.angle - 90)
+        x = d * math.cos(the_angle)
+        y = -d * math.sin(the_angle)
+        m = ((x + p[0]), (y + p[1]))
+        
+        c = CasingActor(self, PlayerActor.angle -90 + random.randint(-2,2), camera = PlayerActor.camera, center = m)
+        #casings.append(c)
+
+        return (b,), (c,)
 
     def doreload(self):
         if self.__class__ == MP412:
@@ -142,14 +177,46 @@ class M870 (Gun):
         self.dmg = 5
         self.rpm = 30
         self.spread = 15
-        self.velocity = 26
+        self.velocity = 13
         self.range = 210
         self.capacity = 5
         self.ammo = self.capacity
         self.reload = 2.7
         self.image = 'm870_hold'
+        self.bulletimage = 'pellet'
+        self.caseimage = 'shell'
         self.ammosize = '12g'
         self.firemode = 'semi'
         self.holdslow = 6
         self.reserve = 20
         self.reservecap = 100
+        
+    def fire(self, PlayerActor):
+        self.ammo -= 1
+        pellets = []
+        for i in range(9):
+            d = PlayerActor._orig_surf.get_size()[0] + random.randint(-5,5)
+            the_angle = math.radians(PlayerActor.angle)
+            x = d * math.cos(the_angle)
+            y = -d * math.sin(the_angle)
+            m = ((PlayerActor.x + x), (PlayerActor.y + y))
+       
+            b = BulletActor(self, PlayerActor.angle, camera = PlayerActor.camera, center = m)
+            pellets.append(b)
+        
+            d = 30
+            the_angle = math.radians(PlayerActor.angle)
+            x = d * math.cos(the_angle)
+            y = -d * math.sin(the_angle)
+            p = ((PlayerActor.x + x), (PlayerActor.y + y))
+
+            d = 5 + random.randint(0,20)
+            the_angle = math.radians(PlayerActor.angle - 90)
+            x = d * math.cos(the_angle)
+            y = -d * math.sin(the_angle)
+            m = ((x + p[0]), (y + p[1]))
+        
+        c = CasingActor(self, PlayerActor.angle -90 + random.randint(-2,2), camera = PlayerActor.camera, center = m)
+        #casings.append(c)
+
+        return pellets, (c,)
