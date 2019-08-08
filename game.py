@@ -12,12 +12,6 @@ import random
 from guns import *
 from actors import *
 
-def dot(A, B):
-    return A[0] * B[0] + A[1] * B[1]
-
-def magnitude(A):
-    return math.sqrt(dot(A, A))
-
 class Camera(object):
     def __init__(self):
         self.pos = (0,0)
@@ -26,7 +20,7 @@ class Camera(object):
         x = self.pos[0] + point[0]
         y = self.pos[1] + point[1]
         return (x,y)
-
+    
     def world_to_camera(self, point):
         x = -self.pos[0] + point[0]
         y = -self.pos[1] + point[1]
@@ -42,11 +36,12 @@ canfire = True
 triggerheld = False
 canresetfire = True
 PlayerActor.anchor = (23,23)
-Guns = [MP412(), MP5(), Vector(), SV98(), M249(), AUG_A1(), M870()]
+Guns = [MP412(), MP5(), Vector(), SV98(), M249(), AUG_A1(), M870(), AA12()]
 currentgun = 0
 PlayerActor.gun = Guns[currentgun]
 pickup = None
 enemy = None
+gunitem = None
 frames = 0
 
 WIDTH = 750
@@ -124,6 +119,15 @@ def createenemy():
     enemy.center = (random.randint(10, (FloorActor.width - 10) + FloorActor.left), random.randint(10, (FloorActor.height - 10) + FloorActor.top))
     enemies.append(enemy)
 
+def creategun():
+    global gunitem
+    try:
+        gunitem = GunActor(camera = camera)
+        gunitem.center = (random.randint(10, (FloorActor.width - 10) + FloorActor.left), random.randint(10, (FloorActor.height - 10) + FloorActor.top))
+    except:
+        pass
+    clock.schedule(creategun, random.randint(5,5))
+
 def update():
     global bullets
     global casings
@@ -166,10 +170,6 @@ def update():
             live_enemies.append(e)
         if e.distance_to(PlayerActor.center) > 75:
             e.forward(2)
-        #if frames % 10 == 0:
-            #e.forward(3)   
-        #else:
-            #e.forward(1)
     enemies = live_enemies
 
     for b in bullets:
@@ -177,10 +177,19 @@ def update():
         dist = b.distance_to(PlayerActor.center)
         for e in enemies:
             dist = b.distance_to(e.center)
-            if dist < 24:
-                e.hp -= PlayerActor.gun.dmg
+            if dist < 36:
+                crit = random.randint(1, 10)
+                if crit == 1:
+                    e.hp -= PlayerActor.gun.dmg * PlayerActor.gun.critmult
+                    e.backward(PlayerActor.gun.knockback  * 1.5)
+                else:
+                    e.hp -= PlayerActor.gun.dmg
+                    e.backward(PlayerActor.gun.knockback)
             elif dist < b.range:
                 live_bullets.append(b)
+        dist = b.distance_to(PlayerActor.center)
+        if (len(enemies) == 0) and (dist < PlayerActor.gun.range):
+           live_bullets.append(b)
        
     bullets = live_bullets
 
@@ -217,11 +226,13 @@ def update():
 def draw():
     screen.fill('white')
     FloorActor.draw()
+    if gunitem is not None:
+        gunitem.draw()
     for b in bullets:
         b.draw()
     for c in casings:
         c.draw()
-    if not pickup == None:
+    if pickup is not None:
         pickup.draw()
     pygame.draw.rect(screen.surface, pygame.Color('#116d5d'), Rect(0, HEIGHT-100, 120, 100))
     if PlayerActor.gun.reloadscheduled == False:
@@ -236,12 +247,14 @@ def draw():
         ptext.draw('Inf.', center = (90, HEIGHT-25), color = '#c5c5c5', fontsize = 20)
     else: 
         ptext.draw(str(PlayerActor.gun.reserve), center = (90, HEIGHT-25), color = '#c5c5c5', fontsize = 20)
-    ptext.draw((str(PlayerActor.gun.__class__.__name__)).replace('_', ' '), center = (55, HEIGHT-75), color = '#c5c5c5', fontsize = 20)
+    gname = getattr(PlayerActor.gun, 'name', str(PlayerActor.gun.__class__.__name__))
+    ptext.draw(gname, center = (55, HEIGHT-75), color = '#c5c5c5', fontsize = 20)
     PlayerActor.draw()
     for e in enemies:
         e.draw()
 
-clock.schedule(createpickup, 1)
+clock.schedule(createpickup, random.randint(15, 20))
 clock.schedule(createenemy, random.randint(1,2))
+clock.schedule(creategun, 1)
 
 pgzrun.go()

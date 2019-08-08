@@ -3,6 +3,23 @@ import pgzero.game as game
 import math
 import random
 
+G_MP5 = 1
+G_VECTOR = 2
+G_SV98 = 3
+G_M249 = 4
+G_AUG_A1 = 5
+G_M870 = 6
+G_AA12 = 7
+
+GUNS = {
+    G_MP5: 'mp5',
+    G_VECTOR: 'vector',
+    G_SV98: 'sv98',
+    G_M249: 'm249',
+    G_AUG_A1: 'aug_a1',
+    G_AA12: 'aa12',
+    }
+
 class TurtleActor(object):
     def __init__(self, *args, **kwargs):
         self.__dict__['_actor'] = Actor(*args, **kwargs)
@@ -89,6 +106,12 @@ class CasingActor(TurtleActor):
 class AmmoActor(TurtleActor):
     def __init__ (self, *args, **kwargs):
         super().__init__('ammo_pickup', *args, **kwargs) 
+
+class GunActor(TurtleActor):
+    def __init__ (self, *args, **kwargs):
+        gunnumber = random.randint(G_MP5, G_AA12)
+        super().__init__(str(GUNS[gunnumber])+'_ground', *args, **kwargs)
+
 
 class EnemyActor(TurtleActor):
     def __init__ (self, etype = None, *args, **kwargs):

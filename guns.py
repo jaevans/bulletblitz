@@ -1,5 +1,6 @@
 import math
 import random
+from pgzero.loaders import sounds
 from actors import BulletActor, CasingActor
 
 class Gun (object):
@@ -21,9 +22,14 @@ class Gun (object):
         self.reloadscheduled = False
         self.reserve = None
         self.reservecap = None
+        self.knockback = 3
+        t = sounds.load('mp412_shot')
+        self.gun_sound = sounds.mp412_shot
+        self.critmult = 1.5
 
     def fire(self, PlayerActor):
         self.ammo -= 1
+        self.gun_sound.play()
         
         d = PlayerActor._orig_surf.get_size()[0]
         the_angle = math.radians(PlayerActor.angle)
@@ -32,7 +38,6 @@ class Gun (object):
         m = ((PlayerActor.x + x), (PlayerActor.y + y))
        
         b = BulletActor(self, PlayerActor.angle, camera = PlayerActor.camera, center = m)
-        #bullets.append(b)
         
         d = 30
         the_angle = math.radians(PlayerActor.angle)
@@ -70,16 +75,19 @@ class MP412 (Gun):
         self.dmg = 16
         self.rpm = 120
         self.spread = 5
-        self.velocity = 20
+        self.velocity = 18
         self.range = 450
         self.capacity = 6
         self.ammo = self.capacity
         self.reload = 2.25
         self.image = 'mp412_hold'
+        self.sound = 'mp412_shot'
         self.ammosize = '9mm'
         self.firemode = 'semi'
         self.holdslow = 4
         self.reserve = 1
+        self.critmult = 2
+        self.knockback = 7
 
 class MP5 (Gun):
     def __init__(self):
@@ -87,7 +95,7 @@ class MP5 (Gun):
         self.dmg = 8
         self.rpm = 700
         self.spread = 10
-        self.velocity = 20
+        self.velocity = 18
         self.range = 450 
         self.capacity = 30
         self.ammo = self.capacity
@@ -105,7 +113,7 @@ class Vector (Gun):
         self.dmg = 6
         self.rpm = 1200
         self.spread = 5
-        self.velocity = 24
+        self.velocity = 18
         self.range = 400 
         self.capacity = 33
         self.ammo = self.capacity
@@ -120,10 +128,11 @@ class Vector (Gun):
 class SV98 (Gun):
     def __init__(self):
         super().__init__()
+        self.name = 'SV-98'
         self.dmg = 86
         self.rpm = 20
         self.spread = 1
-        self.velocity = 45
+        self.velocity = 20
         self.range = 625
         self.capacity = 10
         self.ammo = self.capacity
@@ -134,6 +143,7 @@ class SV98 (Gun):
         self.holdslow = 5
         self.reserve = 30
         self.reservecap = 90
+        self.knockback = 10
 
 class M249 (Gun):
     def __init__(self):
@@ -141,7 +151,7 @@ class M249 (Gun):
         self.dmg = 9
         self.rpm = 860
         self.spread = 20
-        self.velocity = 25
+        self.velocity = 18
         self.range = 575
         self.capacity = 100
         self.ammo = self.capacity
@@ -152,14 +162,16 @@ class M249 (Gun):
         self.holdslow = 8
         self.reserve = 300
         self.reservecap = 600
+        self.critmult = 1.15
 
 class AUG_A1 (Gun):
     def __init__(self):
         super().__init__()
+        self.name = 'AUG A1'
         self.dmg = 10
         self.rpm = 750
         self.spread = 2
-        self.velocity = 26
+        self.velocity = 18
         self.range = 600
         self.capacity = 30
         self.ammo = self.capacity
@@ -171,26 +183,7 @@ class AUG_A1 (Gun):
         self.reserve = 160
         self.reservecap = 480
 
-class M870 (Gun):
-    def __init__(self):
-        super().__init__()
-        self.dmg = 5
-        self.rpm = 30
-        self.spread = 15
-        self.velocity = 13
-        self.range = 210
-        self.capacity = 5
-        self.ammo = self.capacity
-        self.reload = 2.7
-        self.image = 'm870_hold'
-        self.bulletimage = 'pellet'
-        self.caseimage = 'shell'
-        self.ammosize = '12g'
-        self.firemode = 'semi'
-        self.holdslow = 6
-        self.reserve = 20
-        self.reservecap = 100
-        
+class Shotgun (Gun):
     def fire(self, PlayerActor):
         self.ammo -= 1
         pellets = []
@@ -220,3 +213,48 @@ class M870 (Gun):
         #casings.append(c)
 
         return pellets, (c,)
+
+class M870 (Shotgun):
+    def __init__(self):
+        super().__init__()
+        self.dmg = 7
+        self.rpm = 45
+        self.spread = 15
+        self.velocity = 13
+        self.range = 410
+        self.capacity = 5
+        self.ammo = self.capacity
+        self.reload = 2.7
+        self.image = 'm870_hold'
+        self.bulletimage = 'pellet'
+        self.caseimage = 'shell'
+        self.ammosize = '12g'
+        self.firemode = 'semi'
+        self.holdslow = 5
+        self.reserve = 20
+        self.reservecap = 100
+        self.critmult = 1.15
+        self.knockback = 3
+
+class AA12 (Shotgun):
+    def __init__(self):
+        super().__init__()
+        self.name = 'AA-12'
+        self.dmg = 7
+        self.rpm = 300
+        self.spread = 22
+        self.velocity = 13
+        self.range = 410
+        self.capacity = 20
+        self.ammo = self.capacity
+        self.reload = 4.0
+        self.image = 'aa12_hold'
+        self.bulletimage = 'pellet'
+        self.caseimage = 'shell'
+        self.ammosize = '12g'
+        self.firemode = 'auto'
+        self.holdslow = 7
+        self.reserve = 40
+        self.reservecap = 100
+        self.critmult = 1
+        self.knockback = 3
