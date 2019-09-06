@@ -85,7 +85,8 @@ class BulletActor(TurtleActor):
 class PlayerActor(TurtleActor):
     def __init__ (self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.gun = None
+        self.weapon = None
+        
         
 class CasingActor(TurtleActor):
     def __init__ (self, gun, angle, *args, **kwargs):

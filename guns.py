@@ -1,9 +1,14 @@
 import math
+import pygame
 import random
 from pgzero.loaders import sounds
 from actors import BulletActor, CasingActor
 
-class Gun (object):
+class Weapon (object):
+    def __init__(self):
+        pass
+
+class Gun (Weapon):
     def __init__(self):
         self.dmg = None
         self.rpm = None
@@ -19,7 +24,7 @@ class Gun (object):
         self.ammosize = None
         self.firemode = None
         self.holdslow = None
-        self.reloadscheduled = False
+        self.reloadScheduled = False
         self.reserve = None
         self.reservecap = None
         self.knockback = 3
@@ -56,7 +61,7 @@ class Gun (object):
 
         return (b,), (c,)
 
-    def doreload(self):
+    def doReload(self):
         if self.__class__ == MP412:
             self.ammo = self.capacity
         else:
@@ -67,7 +72,7 @@ class Gun (object):
             else:
                 self.ammo = self.reserve
                 self.reserve = 0
-        self.reloadscheduled = False
+        self.reloadScheduled = False
 
 class MP412 (Gun):
     def __init__(self):
@@ -258,3 +263,25 @@ class AA12 (Shotgun):
         self.reservecap = 100
         self.critmult = 1
         self.knockback = 3
+    
+class Throwable (Weapon):
+    def __init__ (self):
+        self.dmg = 100
+        self.fuse = 5
+        self.blastradius = 128
+        self.power = 0
+
+class Grenade (Throwable):
+    def __init__ (self):
+        super().__init__()
+        self.holdslow = 4
+        self.image = 'grenade_hold.png'
+    
+    def increasepower(self):
+        if self.power < 15:
+            self.power += 1
+            clock.schedule(increasepower(), 0.25)
+    
+    def charge(self):
+        self.image = 'grenade_charge.png'
+        self.increasepower()

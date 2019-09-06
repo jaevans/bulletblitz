@@ -32,18 +32,20 @@ FloorActor = TurtleActor('floor', camera = camera)
 bullets = []
 casings = []
 enemies = []
-canfire = True 
-triggerheld = False
-canresetfire = True
+canFire = True 
+triggerHeld = False
+canResetFire = True
 PlayerActor.anchor = (23,23)
 Guns = [MP412(), MP5(), Vector(), SV98(), M249(), AUG_A1(), M870(), AA12()]
-currentgun = 0
-PlayerActor.gun = Guns[currentgun]
+Throwables = [Grenade()]
+previousWeapon = Throwables[0]
+currentGun = 0
+PlayerActor.weapon = Guns[currentGun]
 pickup = None
 enemy = None
 gunitem = None
 frames = 0
-
+weaponTypeSelected = 'gun'
 WIDTH = 750
 HEIGHT = 750
 SPEED = 15
@@ -51,61 +53,72 @@ SPEED = 15
 PlayerActor.pos = (WIDTH/2, HEIGHT/2)
 
 def resetfire():
-    global canfire
-    global canresetfire
-    if PlayerActor.gun.firemode == 'auto':
-        canfire = True
-        canresetfire = False
-    elif PlayerActor.gun.firemode == 'semi':
-        if triggerheld == False:
-            canfire = True
-            canresetfire = False
+    global canFire
+    global canResetFire
+    if isinstance(PlayerActor.weapon, Gun):
+        if PlayerActor.weapon.firemode == 'auto':
+            canFire = True
+            canResetFire = False
+        elif PlayerActor.weapon.firemode == 'semi':
+            if triggerHeld == False:
+                canFire = True
+                canResetFire = False
 
-def canresetfiretrue():
-    global canresetfire
-    canresetfire = True
+def canResetFiretrue():
+    global canResetFire
+    canResetFire = True
 
 def on_mouse_move(pos):
     PlayerActor.angle = PlayerActor.angle_to(camera.camera_to_world(pos))
 
 def on_mouse_down(pos, button):
-    global triggerheld
-    global currentgun
-    triggerheld = True
+    global triggerHeld
+    global currentGun
+    triggerHeld = True
   
     if button == mouse.WHEEL_DOWN:
         saveangle = PlayerActor.angle
-        clock.unschedule(PlayerActor.gun.doreload)
-        PlayerActor.gun.reloadscheduled = False
-        currentgun = (currentgun + 1)%len(Guns)
-        PlayerActor.gun = Guns[currentgun]
-        PlayerActor.image = PlayerActor.gun.image
-        PlayerActor.angle = saveangle
-        if PlayerActor.gun.ammo == 0:
-           clock.schedule(PlayerActor.gun.doreload, PlayerActor.gun.reload)
+        if isinstance(PlayerActor.weapon, Gun):
+            clock.unschedule(PlayerActor.weapon.doReload)
+            PlayerActor.weapon.reloadScheduled = False
+            currentGun = (currentGun + 1)%len(Guns)
+            PlayerActor.weapon = Guns[currentGun]
+            PlayerActor.image = PlayerActor.weapon.image
+            PlayerActor.angle = saveangle
+            if PlayerActor.weapon.ammo == 0:
+                clock.schedule(PlayerActor.weapon.doReload, PlayerActor.weapon.reload)
 
    
     if button == mouse.WHEEL_UP:
         saveangle = PlayerActor.angle
-        clock.unschedule(PlayerActor.gun.doreload)
-        PlayerActor.gun.reloadscheduled = False
-        currentgun = (currentgun - 1)%len(Guns)
-        PlayerActor.gun = Guns[currentgun]
-        PlayerActor.image = PlayerActor.gun.image
-        PlayerActor.angle = saveangle
-        if PlayerActor.gun.ammo == 0:
-           clock.schedule(PlayerActor.gun.doreload, PlayerActor.gun.reload)
+        if isinstance(PlayerActor.weapon, Gun):
+            clock.unschedule(PlayerActor.weapon.doReload)
+            PlayerActor.weapon.reloadScheduled = False
+            currentGun = (currentGun - 1)%len(Guns)
+            PlayerActor.weapon = Guns[currentGun]
+            PlayerActor.image = PlayerActor.weapon.image
+            PlayerActor.angle = saveangle
+            if PlayerActor.weapon.ammo == 0:
+                clock.schedule(PlayerActor.weapon.doReload, PlayerActor.weapon.reload)
 
 def on_mouse_up(pos, button):
-    global triggerheld
-    triggerheld = False
+    global triggerHeld
+    triggerHeld = False
 
 def on_key_down(key, mod, unicode):
-    if key == keys.R and PlayerActor.gun.reloadscheduled == False and not PlayerActor.gun.reserve == 0:
-        PlayerActor.gun.reloadscheduled = True
-        clock.schedule(PlayerActor.gun.doreload, PlayerActor.gun.reload)
-    if key == keys.P:
-        createpickup()
+    global weaponTypeSelected
+    global previousWeapon
+    if isinstance(PlayerActor.weapon, Gun):
+        if key == keys.R and PlayerActor.weapon.reloadScheduled == False and not PlayerActor.weapon.reserve == 0:
+            PlayerActor.weapon.reloadScheduled = True
+            clock.schedule(PlayerActor.weapon.doReload, PlayerActor.weapon.reload)
+    if key == keys.G:
+        saveangle = PlayerActor.angle
+        t = previousWeapon
+        previousWeapon = PlayerActor.weapon
+        PlayerActor.weapon = t
+        PlayerActor.image = PlayerActor.weapon.image
+        PlayerActor.angle = saveangle
 
 def createpickup():
     global pickup
@@ -132,28 +145,39 @@ def update():
     global bullets
     global casings
     global enemies
-    global canfire
-    global triggerheld
-    global canresetfire
+    global canFire
+    global triggerHeld
+    global canResetFire
     global pickup
     global frames
     
     frames += 1
 
     if pickup is not None and pickup.distance_to(PlayerActor.center) < 64:
-        if not PlayerActor.gun.__class__ == MP412:
-            if PlayerActor.gun.reserve < PlayerActor.gun.reservecap:
+        if not PlayerActor.weapon.__class__ == MP412:
+            if PlayerActor.weapon.reserve < PlayerActor.weapon.reservecap:
                 pickup = None
-                PlayerActor.gun.reserve += random.randint(round(PlayerActor.gun.capacity * 1.5), PlayerActor.gun.capacity * 3)
+                PlayerActor.weapon.reserve += random.randint(round(PlayerActor.weapon.capacity * 1.5), PlayerActor.weapon.capacity * 3)
 
     if keyboard[keys.W]:
-        PlayerActor.y = max((PlayerActor.y - SPEED + PlayerActor.gun.holdslow), FloorActor.top)
+        PlayerActor.y = max((PlayerActor.y - SPEED + PlayerActor.weapon.holdslow), FloorActor.top)
     if keyboard[keys.A]:
-        PlayerActor.x = max((PlayerActor.x - SPEED + PlayerActor.gun.holdslow), FloorActor.left)
+        PlayerActor.x = max((PlayerActor.x - SPEED + PlayerActor.weapon.holdslow), FloorActor.left)
     if keyboard[keys.S]:
-        PlayerActor.y = min((PlayerActor.y + SPEED - PlayerActor.gun.holdslow), FloorActor.bottom)
+        PlayerActor.y = min((PlayerActor.y + SPEED - PlayerActor.weapon.holdslow), FloorActor.bottom)
     if keyboard[keys.D]:
-        PlayerActor.x = min((PlayerActor.x + SPEED - PlayerActor.gun.holdslow), FloorActor.right)
+        PlayerActor.x = min((PlayerActor.x + SPEED - PlayerActor.weapon.holdslow), FloorActor.right)
+    if isinstance(PlayerActor.weapon, Throwable):
+        if triggerHeld:
+            saveangle = PlayerActor.angle
+            PlayerActor.image = 'grenade_charge'
+            PlayerActor.weapon.charge()
+            print(str(PlayerActor.weapon.power))
+            PlayerActor.angle = saveangle
+        else:
+            saveangle = PlayerActor.angle
+            PlayerActor.image = 'grenade_hold'
+            PlayerActor.angle = saveangle
     live_bullets = []
     live_casings = []
     live_enemies = []
@@ -180,15 +204,15 @@ def update():
             if dist < 36:
                 crit = random.randint(1, 10)
                 if crit == 1:
-                    e.hp -= PlayerActor.gun.dmg * PlayerActor.gun.critmult
-                    e.backward(PlayerActor.gun.knockback  * 1.5)
+                    e.hp -= PlayerActor.weapon.dmg * PlayerActor.weapon.critmult
+                    e.backward(PlayerActor.weapon.knockback  * 1.5)
                 else:
-                    e.hp -= PlayerActor.gun.dmg
-                    e.backward(PlayerActor.gun.knockback)
+                    e.hp -= PlayerActor.weapon.dmg
+                    e.backward(PlayerActor.weapon.knockback)
             elif dist < b.range:
                 live_bullets.append(b)
         dist = b.distance_to(PlayerActor.center)
-        if (len(enemies) == 0) and (dist < PlayerActor.gun.range):
+        if (len(enemies) == 0) and (dist < PlayerActor.weapon.range):
            live_bullets.append(b)
        
     bullets = live_bullets
@@ -203,23 +227,23 @@ def update():
             clock.schedule(c.killtimer, 15)
         casings = live_casings
      
-    if canresetfire == True:
+    if canResetFire == True:
         resetfire()
-
-    if PlayerActor.gun.ammo == 0 and PlayerActor.gun.reloadscheduled == False:
-            PlayerActor.gun.reloadscheduled = True
-            clock.schedule(PlayerActor.gun.doreload, PlayerActor.gun.reload)
-  
-    if triggerheld == True and canfire == True and PlayerActor.gun.ammo > 0:
-        b,c = PlayerActor.gun.fire(PlayerActor)
-        bullets.extend(b)
-        casings.extend(c)
-        canfire = False
-        clock.schedule(canresetfiretrue, round(60/PlayerActor.gun.rpm, 2))
+    if isinstance(PlayerActor.weapon, Gun):
+        if PlayerActor.weapon.ammo == 0 and PlayerActor.weapon.reloadScheduled == False:
+                PlayerActor.weapon.reloadScheduled = True
+                clock.schedule(PlayerActor.weapon.doReload, PlayerActor.weapon.reload)
     
-    if (not PlayerActor.gun.__class__ == MP412):
-        if PlayerActor.gun.reserve > PlayerActor.gun.reservecap:
-            PlayerActor.gun.reserve = PlayerActor.gun.reservecap
+        if triggerHeld == True and canFire == True and PlayerActor.weapon.ammo > 0:
+            b,c = PlayerActor.weapon.fire(PlayerActor)
+            bullets.extend(b)
+            casings.extend(c)
+            canFire = False
+            clock.schedule(canResetFiretrue, round(60/PlayerActor.weapon.rpm, 2))
+        
+        if (not PlayerActor.weapon.__class__ == MP412):
+            if PlayerActor.weapon.reserve > PlayerActor.weapon.reservecap:
+                PlayerActor.weapon.reserve = PlayerActor.weapon.reservecap
 
     camera.pos = (PlayerActor.x - (WIDTH//2), PlayerActor.y - (HEIGHT//2))
 
@@ -235,20 +259,23 @@ def draw():
     if pickup is not None:
         pickup.draw()
     pygame.draw.rect(screen.surface, pygame.Color('#116d5d'), Rect(0, HEIGHT-100, 120, 100))
-    if PlayerActor.gun.reloadscheduled == False:
-        ptext.draw(str(PlayerActor.gun.ammo), center = (35, HEIGHT-25), color = '#c5c5c5', fontsize = 20) 
-    elif PlayerActor.gun.reserve > 0:
-        ptext.draw('Reloading', center = (35, HEIGHT-25), color = '#c5c5c5', fontsize = 20) 
-    elif PlayerActor.gun.reserve == 0:
-        ptext.draw('0', center = (35, HEIGHT-25), color = '#c5c5c5', fontsize = 20)
+    if isinstance(PlayerActor.weapon, Gun):
+        if PlayerActor.weapon.reloadScheduled == False:
+            ptext.draw(str(PlayerActor.weapon.ammo), center = (35, HEIGHT-25), color = '#c5c5c5', fontsize = 20) 
+        elif PlayerActor.weapon.reserve > 0:
+            ptext.draw('Reloading', center = (35, HEIGHT-25), color = '#c5c5c5', fontsize = 20) 
+        elif PlayerActor.weapon.reserve == 0:
+            ptext.draw('0', center = (35, HEIGHT-25), color = '#c5c5c5', fontsize = 20)
+        if PlayerActor.weapon.__class__ == MP412:
+            ptext.draw('Inf.', center = (90, HEIGHT-25), color = '#c5c5c5', fontsize = 20)
+        else: 
+            ptext.draw(str(PlayerActor.weapon.reserve), center = (90, HEIGHT-25), color = '#c5c5c5', fontsize = 20)
+    else:
+        ptext.draw(str(PlayerActor.weapon.power), center = (90, HEIGHT-25), color = '#c5c5c5', fontsize = 20)
+    gname = getattr(PlayerActor.weapon, 'name', str(PlayerActor.weapon.__class__.__name__))
+    ptext.draw(gname, center = (55, HEIGHT-75), color = '#c5c5c5', fontsize = 20)
     ptext.draw('Ammo', center = (35, HEIGHT-50), color = '#c5c5c5', fontsize = 20 )
     ptext.draw('Reserve', center = (90, HEIGHT-50), color = '#c5c5c5', fontsize = 20)
-    if PlayerActor.gun.__class__ == MP412:
-        ptext.draw('Inf.', center = (90, HEIGHT-25), color = '#c5c5c5', fontsize = 20)
-    else: 
-        ptext.draw(str(PlayerActor.gun.reserve), center = (90, HEIGHT-25), color = '#c5c5c5', fontsize = 20)
-    gname = getattr(PlayerActor.gun, 'name', str(PlayerActor.gun.__class__.__name__))
-    ptext.draw(gname, center = (55, HEIGHT-75), color = '#c5c5c5', fontsize = 20)
     PlayerActor.draw()
     for e in enemies:
         e.draw()
