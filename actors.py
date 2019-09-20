@@ -70,17 +70,33 @@ class TurtleActor(object):
         #print(ret)
         return ret
         
-class BulletActor(TurtleActor):
-    def __init__ (self, gun, angle, *args, **kwargs):
-        super().__init__(gun.bulletimage, *args, **kwargs)
+class ProjectileActor(TurtleActor):
+    def __init__ (self, image, angle, *args, **kwargs):
+        super().__init__(image, *args, **kwargs)
+
+        self.angle = angle
+
+class BulletActor (ProjectileActor):
+    def __init__(self, gun, angle, *args, **kwargs):
+        super().__init__(gun.bulletimage, angle, *args, **kwargs)
         self.dmg = gun.dmg
         self.velocity = gun.velocity
         self.range = gun.range
         self.spread = gun.spread
         self.angle = angle + ((random.random()* self.spread) - self.spread / 2)
-        
-    def move(self):
-        self.forward(self.velocity)
+    
+        def move(self):
+            self.forward(self.velocity)
+
+class GrenadeActor (ProjectileActor):
+    def __init__(self, grenade, angle, *args, **kwargs):
+        super().__init__(grenade.grenadeimage, angle, *args, **kwargs)
+        self.power = grenade.power
+        self.angle = angle
+
+        def move(self):
+            self.forward(10)
+            #self.power -= 1
 
 class PlayerActor(TurtleActor):
     def __init__ (self, *args, **kwargs):

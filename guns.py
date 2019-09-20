@@ -1,15 +1,16 @@
 import math
-import pygame
+from pgzero.clock import clock
 import random
 from pgzero.loaders import sounds
-from actors import BulletActor, CasingActor
+from actors import BulletActor, GrenadeActor, CasingActor
 
 class Weapon (object):
     def __init__(self):
-        pass
+        self.triggerHeld = False
 
 class Gun (Weapon):
     def __init__(self):
+        super().__init__()
         self.dmg = None
         self.rpm = None
         self.spread = None
@@ -266,6 +267,7 @@ class AA12 (Shotgun):
     
 class Throwable (Weapon):
     def __init__ (self):
+        super().__init__()
         self.dmg = 100
         self.fuse = 5
         self.blastradius = 128
@@ -275,13 +277,24 @@ class Grenade (Throwable):
     def __init__ (self):
         super().__init__()
         self.holdslow = 4
-        self.image = 'grenade_hold.png'
+        self.holdimage = 'grenade_hold'
+        self.chargeimage = 'grenade_charge'
+        self.grenadeimage = 'grenade'
+        self.reserve = 5
+        self.reservecap = 15
     
     def increasepower(self):
-        if self.power < 15:
-            self.power += 1
-            clock.schedule(increasepower(), 0.25)
-    
-    def charge(self):
-        self.image = 'grenade_charge.png'
-        self.increasepower()
+        if self.power < 99 and self.triggerHeld:
+            self.power += 3
+            clock.schedule(self.increasepower, .033)
+
+    def throw(self, PlayerActor):
+        
+        d = 30
+        the_angle = math.radians(PlayerActor.angle)
+        x = d * math.cos(the_angle)
+        y = -d * math.sin(the_angle)
+        p = ((PlayerActor.x + x), (PlayerActor.y + y))
+
+        g = GrenadeActor(self, PlayerActor.angle, camera = PlayerActor.camera, center = p)
+        return g

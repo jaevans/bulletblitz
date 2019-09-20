@@ -32,8 +32,8 @@ FloorActor = TurtleActor('floor', camera = camera)
 bullets = []
 casings = []
 enemies = []
+grenades = []
 canFire = True 
-triggerHeld = False
 canResetFire = True
 PlayerActor.anchor = (23,23)
 Guns = [MP412(), MP5(), Vector(), SV98(), M249(), AUG_A1(), M870(), AA12()]
@@ -60,7 +60,7 @@ def resetfire():
             canFire = True
             canResetFire = False
         elif PlayerActor.weapon.firemode == 'semi':
-            if triggerHeld == False:
+            if PlayerActor.weapon.triggerHeld == False:
                 canFire = True
                 canResetFire = False
 
@@ -72,9 +72,8 @@ def on_mouse_move(pos):
     PlayerActor.angle = PlayerActor.angle_to(camera.camera_to_world(pos))
 
 def on_mouse_down(pos, button):
-    global triggerHeld
     global currentGun
-    triggerHeld = True
+    PlayerActor.weapon.triggerHeld = True
   
     if button == mouse.WHEEL_DOWN:
         saveangle = PlayerActor.angle
@@ -102,8 +101,7 @@ def on_mouse_down(pos, button):
                 clock.schedule(PlayerActor.weapon.doReload, PlayerActor.weapon.reload)
 
 def on_mouse_up(pos, button):
-    global triggerHeld
-    triggerHeld = False
+    PlayerActor.weapon.triggerHeld = False
 
 def on_key_down(key, mod, unicode):
     global weaponTypeSelected
@@ -117,7 +115,7 @@ def on_key_down(key, mod, unicode):
         t = previousWeapon
         previousWeapon = PlayerActor.weapon
         PlayerActor.weapon = t
-        PlayerActor.image = PlayerActor.weapon.image
+        PlayerActor.image = PlayerActor.weapon.holdimage
         PlayerActor.angle = saveangle
 
 def createpickup():
@@ -145,15 +143,15 @@ def update():
     global bullets
     global casings
     global enemies
+    global grenades
     global canFire
-    global triggerHeld
     global canResetFire
     global pickup
     global frames
     
     frames += 1
 
-    if pickup is not None and pickup.distance_to(PlayerActor.center) < 64:
+    if pickup is not None and pickup.distance_to(PlayerActor.center) < 64 and isinstance(PlayerActor.weapon, Gun):
         if not PlayerActor.weapon.__class__ == MP412:
             if PlayerActor.weapon.reserve < PlayerActor.weapon.reservecap:
                 pickup = None
@@ -168,19 +166,26 @@ def update():
     if keyboard[keys.D]:
         PlayerActor.x = min((PlayerActor.x + SPEED - PlayerActor.weapon.holdslow), FloorActor.right)
     if isinstance(PlayerActor.weapon, Throwable):
-        if triggerHeld:
+        if PlayerActor.weapon.triggerHeld:
             saveangle = PlayerActor.angle
-            PlayerActor.image = 'grenade_charge'
-            PlayerActor.weapon.charge()
-            print(str(PlayerActor.weapon.power))
+            PlayerActor.image = PlayerActor.weapon.chargeimage
+            if PlayerActor.weapon.power == 0:
+                PlayerActor.weapon.increasepower()
             PlayerActor.angle = saveangle
         else:
+            if PlayerActor.weapon.power > 0:
+                g = PlayerActor.weapon.throw(PlayerActor)
+                grenades.append(g)
+                PlayerActor.weapon.power = 0
+
             saveangle = PlayerActor.angle
-            PlayerActor.image = 'grenade_hold'
+            PlayerActor.image = PlayerActor.weapon.holdimage
             PlayerActor.angle = saveangle
+    
     live_bullets = []
     live_casings = []
     live_enemies = []
+    live_grenades = []
 
     for e in enemies:
         degs = e.angle_to(PlayerActor.pos)
@@ -217,6 +222,9 @@ def update():
        
     bullets = live_bullets
 
+    for g in grenades:
+        g.move()
+
     for c in casings:
         clock.schedule(c.stopfly, (random.randint(0,50)/1000) + .075)
         if c.alive:
@@ -234,7 +242,7 @@ def update():
                 PlayerActor.weapon.reloadScheduled = True
                 clock.schedule(PlayerActor.weapon.doReload, PlayerActor.weapon.reload)
     
-        if triggerHeld == True and canFire == True and PlayerActor.weapon.ammo > 0:
+        if PlayerActor.weapon.triggerHeld == True and canFire == True and PlayerActor.weapon.ammo > 0:
             b,c = PlayerActor.weapon.fire(PlayerActor)
             bullets.extend(b)
             casings.extend(c)
@@ -256,6 +264,8 @@ def draw():
         b.draw()
     for c in casings:
         c.draw()
+    for g in grenades:
+        g.draw()
     if pickup is not None:
         pickup.draw()
     pygame.draw.rect(screen.surface, pygame.Color('#116d5d'), Rect(0, HEIGHT-100, 120, 100))
