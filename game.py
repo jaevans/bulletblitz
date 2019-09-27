@@ -82,7 +82,7 @@ def on_mouse_down(pos, button):
             PlayerActor.weapon.reloadScheduled = False
             currentGun = (currentGun + 1)%len(Guns)
             PlayerActor.weapon = Guns[currentGun]
-            PlayerActor.image = PlayerActor.weapon.image
+            PlayerActor.image = PlayerActor.weapon.holdimage
             PlayerActor.angle = saveangle
             if PlayerActor.weapon.ammo == 0:
                 clock.schedule(PlayerActor.weapon.doReload, PlayerActor.weapon.reload)
@@ -95,7 +95,7 @@ def on_mouse_down(pos, button):
             PlayerActor.weapon.reloadScheduled = False
             currentGun = (currentGun - 1)%len(Guns)
             PlayerActor.weapon = Guns[currentGun]
-            PlayerActor.image = PlayerActor.weapon.image
+            PlayerActor.image = PlayerActor.weapon.holdimage
             PlayerActor.angle = saveangle
             if PlayerActor.weapon.ammo == 0:
                 clock.schedule(PlayerActor.weapon.doReload, PlayerActor.weapon.reload)
@@ -217,13 +217,15 @@ def update():
             elif dist < b.range:
                 live_bullets.append(b)
         dist = b.distance_to(PlayerActor.center)
-        if (len(enemies) == 0) and (dist < PlayerActor.weapon.range):
+        if isinstance(PlayerActor.weapon, Gun) and (len(enemies) == 0) and (dist < PlayerActor.weapon.range):
            live_bullets.append(b)
        
     bullets = live_bullets
 
     for g in grenades:
-        g.move()
+        if g.velocity > 0:
+            g.move()
+
 
     for c in casings:
         clock.schedule(c.stopfly, (random.randint(0,50)/1000) + .075)

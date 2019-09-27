@@ -85,8 +85,8 @@ class BulletActor (ProjectileActor):
         self.spread = gun.spread
         self.angle = angle + ((random.random()* self.spread) - self.spread / 2)
     
-        def move(self):
-            self.forward(self.velocity)
+    def move(self):
+        self.forward(self.velocity)
 
 class GrenadeActor (ProjectileActor):
     def __init__(self, grenade, angle, *args, **kwargs):
@@ -94,9 +94,12 @@ class GrenadeActor (ProjectileActor):
         self.power = grenade.power
         self.angle = angle
 
-        def move(self):
-            self.forward(10)
-            #self.power -= 1
+    def move(self):
+        if self.velocity > 0:
+            self.forward(self.velocity)
+            self.velocity -= 1
+        else:
+            self.image = grenade.explodeimage
 
 class PlayerActor(TurtleActor):
     def __init__ (self, *args, **kwargs):

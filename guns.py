@@ -86,7 +86,7 @@ class MP412 (Gun):
         self.capacity = 6
         self.ammo = self.capacity
         self.reload = 2.25
-        self.image = 'mp412_hold'
+        self.holdimage = 'mp412_hold'
         self.sound = 'mp412_shot'
         self.ammosize = '9mm'
         self.firemode = 'semi'
@@ -106,7 +106,7 @@ class MP5 (Gun):
         self.capacity = 30
         self.ammo = self.capacity
         self.reload = 2.3
-        self.image = 'mp5_hold'
+        self.holdimage = 'mp5_hold'
         self.ammosize = '9mm'
         self.firemode = 'auto'
         self.holdslow = 5
@@ -124,7 +124,7 @@ class Vector (Gun):
         self.capacity = 33
         self.ammo = self.capacity
         self.reload = 2.1
-        self.image = 'vector_hold'
+        self.holdimage = 'vector_hold'
         self.ammosize = '9mm'
         self.firemode = 'auto'
         self.holdslow = 6
@@ -143,7 +143,7 @@ class SV98 (Gun):
         self.capacity = 10
         self.ammo = self.capacity
         self.reload = 3.4
-        self.image = 'sv98_hold'
+        self.holdimage = 'sv98_hold'
         self.ammosize = '7.62'
         self.firemode = 'semi'
         self.holdslow = 5
@@ -162,7 +162,7 @@ class M249 (Gun):
         self.capacity = 100
         self.ammo = self.capacity
         self.reload = 7.1
-        self.image = 'm249_hold'
+        self.holdimage = 'm249_hold'
         self.ammosize = '5.56'
         self.firemode = 'auto'
         self.holdslow = 8
@@ -182,7 +182,7 @@ class AUG_A1 (Gun):
         self.capacity = 30
         self.ammo = self.capacity
         self.reload = 2.7
-        self.image = 'auga1_hold'
+        self.holdimage = 'auga1_hold'
         self.ammosize = '5.56'
         self.firemode = 'auto'
         self.holdslow = 6
@@ -231,7 +231,7 @@ class M870 (Shotgun):
         self.capacity = 5
         self.ammo = self.capacity
         self.reload = 2.7
-        self.image = 'm870_hold'
+        self.holdimage = 'm870_hold'
         self.bulletimage = 'pellet'
         self.caseimage = 'shell'
         self.ammosize = '12g'
@@ -254,7 +254,7 @@ class AA12 (Shotgun):
         self.capacity = 20
         self.ammo = self.capacity
         self.reload = 4.0
-        self.image = 'aa12_hold'
+        self.holdimage = 'aa12_hold'
         self.bulletimage = 'pellet'
         self.caseimage = 'shell'
         self.ammosize = '12g'
@@ -280,16 +280,17 @@ class Grenade (Throwable):
         self.holdimage = 'grenade_hold'
         self.chargeimage = 'grenade_charge'
         self.grenadeimage = 'grenade'
+        self.explodeimage = 'explosion'
         self.reserve = 5
         self.reservecap = 15
     
     def increasepower(self):
-        if self.power < 99 and self.triggerHeld:
+        if self.power < 33 and self.triggerHeld:
             self.power += 3
             clock.schedule(self.increasepower, .033)
 
     def throw(self, PlayerActor):
-        
+    
         d = 30
         the_angle = math.radians(PlayerActor.angle)
         x = d * math.cos(the_angle)
@@ -297,4 +298,5 @@ class Grenade (Throwable):
         p = ((PlayerActor.x + x), (PlayerActor.y + y))
 
         g = GrenadeActor(self, PlayerActor.angle, camera = PlayerActor.camera, center = p)
+        g.velocity = g.power
         return g
