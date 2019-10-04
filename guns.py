@@ -285,7 +285,7 @@ class Grenade (Throwable):
         self.reservecap = 15
     
     def increasepower(self):
-        if self.power < 33 and self.triggerHeld:
+        if self.power < 20 and self.triggerHeld:
             self.power += 3
             clock.schedule(self.increasepower, .033)
 

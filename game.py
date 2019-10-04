@@ -35,6 +35,7 @@ enemies = []
 grenades = []
 canFire = True 
 canResetFire = True
+triggertemp = False
 PlayerActor.anchor = (23,23)
 Guns = [MP412(), MP5(), Vector(), SV98(), M249(), AUG_A1(), M870(), AA12()]
 Throwables = [Grenade()]
@@ -49,6 +50,7 @@ weaponTypeSelected = 'gun'
 WIDTH = 750
 HEIGHT = 750
 SPEED = 15
+mouse_buttons = [False] * (mouse.WHEEL_DOWN + 1)
 
 PlayerActor.pos = (WIDTH/2, HEIGHT/2)
 
@@ -73,6 +75,9 @@ def on_mouse_move(pos):
 
 def on_mouse_down(pos, button):
     global currentGun
+    global triggertemp
+    mouse_buttons[button] = True
+    triggertemp = True
     PlayerActor.weapon.triggerHeld = True
   
     if button == mouse.WHEEL_DOWN:
@@ -101,6 +106,9 @@ def on_mouse_down(pos, button):
                 clock.schedule(PlayerActor.weapon.doReload, PlayerActor.weapon.reload)
 
 def on_mouse_up(pos, button):
+    global triggertemp
+    mouse_buttons[button] = False
+    triggertemp = True
     PlayerActor.weapon.triggerHeld = False
 
 def on_key_down(key, mod, unicode):
@@ -148,7 +156,8 @@ def update():
     global canResetFire
     global pickup
     global frames
-    
+    global triggertemp
+
     frames += 1
 
     if pickup is not None and pickup.distance_to(PlayerActor.center) < 64 and isinstance(PlayerActor.weapon, Gun):
@@ -166,21 +175,27 @@ def update():
     if keyboard[keys.D]:
         PlayerActor.x = min((PlayerActor.x + SPEED - PlayerActor.weapon.holdslow), FloorActor.right)
     if isinstance(PlayerActor.weapon, Throwable):
-        if PlayerActor.weapon.triggerHeld:
-            saveangle = PlayerActor.angle
-            PlayerActor.image = PlayerActor.weapon.chargeimage
-            if PlayerActor.weapon.power == 0:
-                PlayerActor.weapon.increasepower()
-            PlayerActor.angle = saveangle
-        else:
-            if PlayerActor.weapon.power > 0:
+        if triggertemp == True:
+            # If the user just pressed/released the mouse
+            if mouse_buttons[mouse.LEFT]:
+                # they just pressed the left button
+                saveangle = PlayerActor.angle
+                PlayerActor.image = PlayerActor.weapon.chargeimage
+                if PlayerActor.weapon.power >= 0:
+                    PlayerActor.weapon.increasepower()
+                PlayerActor.angle = saveangle
+            else:
+                # they released some button, but I don't know what
                 g = PlayerActor.weapon.throw(PlayerActor)
                 grenades.append(g)
-                PlayerActor.weapon.power = 0
-
-            saveangle = PlayerActor.angle
-            PlayerActor.image = PlayerActor.weapon.holdimage
-            PlayerActor.angle = saveangle
+                pass
+        else:
+            if mouse_buttons[mouse.LEFT]:
+                # The user is *holding* down the left button for at least 1 frame
+                pass
+            else:
+                # the left mouse button is not pressed
+                pass
     
     live_bullets = []
     live_casings = []
@@ -255,6 +270,7 @@ def update():
             if PlayerActor.weapon.reserve > PlayerActor.weapon.reservecap:
                 PlayerActor.weapon.reserve = PlayerActor.weapon.reservecap
 
+    triggertemp = False
     camera.pos = (PlayerActor.x - (WIDTH//2), PlayerActor.y - (HEIGHT//2))
 
 def draw():

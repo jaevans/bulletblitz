@@ -93,13 +93,14 @@ class GrenadeActor (ProjectileActor):
         super().__init__(grenade.grenadeimage, angle, *args, **kwargs)
         self.power = grenade.power
         self.angle = angle
+        self.explodeimage = grenade.explodeimage
 
     def move(self):
         if self.velocity > 0:
             self.forward(self.velocity)
             self.velocity -= 1
         else:
-            self.image = grenade.explodeimage
+            self.image = self.explodeimage
 
 class PlayerActor(TurtleActor):
     def __init__ (self, *args, **kwargs):
