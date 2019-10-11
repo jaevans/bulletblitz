@@ -238,16 +238,27 @@ def update():
     bullets = live_bullets
 
     for g in grenades:
-        if g.velocity > 0:
-            g.move()
+        g.move()
+        for e in enemies:
+            dist = e.distance_to(g.center)
+            if dist < 32 and g.image == g.explodeimage:
+                e.hp -= 5
+        if g.alive == True:
+            live_grenades.append(g)
+    
+    grenades = live_grenades
+
 
 
     for c in casings:
-        clock.schedule(c.stopfly, (random.randint(0,50)/1000) + .075)
+        clock.schedule(c.stopfly, (random.randint(0,50)/1000) + .075+1)
         if c.alive:
             live_casings.append(c)
         if c.flying:
             c.move()
+            #c.x += 5 * math.cos(c.moveangle)
+            #c.y -= 5 * math.sin(c.moveangle)
+            #c.turnleft(15)
         else:
             clock.schedule(c.killtimer, 15)
         casings = live_casings

@@ -2,6 +2,7 @@ from pgzero.actor import Actor
 import pgzero.game as game
 import math
 import random
+from pgzero.clock import clock
 
 G_MP5 = 1
 G_VECTOR = 2
@@ -94,24 +95,32 @@ class GrenadeActor (ProjectileActor):
         self.power = grenade.power
         self.angle = angle
         self.explodeimage = grenade.explodeimage
+        self.fuse = grenade.fuse
+        self.alive = True
+        clock.schedule(self.explode, self.fuse)
 
     def move(self):
         if self.velocity > 0:
             self.forward(self.velocity)
             self.velocity -= 1
-        else:
-            self.image = self.explodeimage
+    
+    def kill(self):
+        self.alive = False
+    
+    def explode(self):
+        self.image = self.explodeimage
+        clock.schedule(self.kill, 1)
 
 class PlayerActor(TurtleActor):
     def __init__ (self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.weapon = None
         
-        
 class CasingActor(TurtleActor):
     def __init__ (self, gun, angle, *args, **kwargs):
         super().__init__(gun.caseimage , *args, **kwargs)
         self.angle = angle
+        self.moveangle = angle
         self.alive = True
         self.flying = True
 
@@ -122,7 +131,9 @@ class CasingActor(TurtleActor):
         self.flying = False
     
     def move(self):
-        self.forward(10)
+        self.x += 5 * math.cos(self.moveangle)
+        self.y -= 5 * math.sin(self.moveangle)
+        self.turnleft(15)
 
 class AmmoActor(TurtleActor):
     def __init__ (self, *args, **kwargs):

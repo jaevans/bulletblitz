@@ -57,7 +57,7 @@ class Gun (Weapon):
         y = -d * math.sin(the_angle)
         m = ((x + p[0]), (y + p[1]))
         
-        c = CasingActor(self, PlayerActor.angle -90 + random.randint(-2,2), camera = PlayerActor.camera, center = m)
+        c = CasingActor(self, (PlayerActor.angle - 90.0) + random.randint(-2,2), camera = PlayerActor.camera, center = m)
         #casings.append(c)
 
         return (b,), (c,)
@@ -155,7 +155,8 @@ class M249 (Gun):
     def __init__(self):
         super().__init__()
         self.dmg = 9
-        self.rpm = 860
+        #self.rpm = 860
+        self.rpm = 120
         self.spread = 20
         self.velocity = 18
         self.range = 575
@@ -277,6 +278,7 @@ class Grenade (Throwable):
     def __init__ (self):
         super().__init__()
         self.holdslow = 4
+        self.fuse = 2
         self.holdimage = 'grenade_hold'
         self.chargeimage = 'grenade_charge'
         self.grenadeimage = 'grenade'

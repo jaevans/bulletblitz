@@ -51,3 +51,6 @@ def graph():
     angles.remove(angles[0]) # Removing the first angle value so that the turtle rotates correctly on the next loop
     t.write(y+'%', font=('Arial', 16, 'normal')) # Writing the percent value on the lines
     t.color('black')
+
+#while True:
+ #  graph()
