@@ -19,7 +19,8 @@ class Gun (Weapon):
         self.capacity = None
         self.ammo = None
         self.reload = None
-        self.image = None
+        self.holdimage = None
+        self.ejectsonfire = None
         self.bulletimage = 'bullet'
         self.caseimage = 'case'
         self.ammosize = None
@@ -59,8 +60,10 @@ class Gun (Weapon):
         
         c = CasingActor(self, (PlayerActor.angle - 90.0) + random.randint(-2,2), camera = PlayerActor.camera, center = m)
         #casings.append(c)
-
-        return (b,), (c,)
+        if self.ejectsonfire: 
+            return (b,), (c,)
+        else:
+            return ((b,), )
 
     def doReload(self):
         if self.__class__ == MP412:
@@ -87,6 +90,7 @@ class MP412 (Gun):
         self.ammo = self.capacity
         self.reload = 2.25
         self.holdimage = 'mp412_hold'
+        self.ejectsonfire = False
         self.sound = 'mp412_shot'
         self.ammosize = '9mm'
         self.firemode = 'semi'
@@ -107,6 +111,7 @@ class MP5 (Gun):
         self.ammo = self.capacity
         self.reload = 2.3
         self.holdimage = 'mp5_hold'
+        self.ejectsonfire = True
         self.ammosize = '9mm'
         self.firemode = 'auto'
         self.holdslow = 5
@@ -125,6 +130,7 @@ class Vector (Gun):
         self.ammo = self.capacity
         self.reload = 2.1
         self.holdimage = 'vector_hold'
+        self.ejectsonfire = True
         self.ammosize = '9mm'
         self.firemode = 'auto'
         self.holdslow = 6
@@ -144,6 +150,7 @@ class SV98 (Gun):
         self.ammo = self.capacity
         self.reload = 3.4
         self.holdimage = 'sv98_hold'
+        self.ejectsonfire = True
         self.ammosize = '7.62'
         self.firemode = 'semi'
         self.holdslow = 5
@@ -155,8 +162,7 @@ class M249 (Gun):
     def __init__(self):
         super().__init__()
         self.dmg = 9
-        #self.rpm = 860
-        self.rpm = 120
+        self.rpm = 860
         self.spread = 20
         self.velocity = 18
         self.range = 575
@@ -164,6 +170,7 @@ class M249 (Gun):
         self.ammo = self.capacity
         self.reload = 7.1
         self.holdimage = 'm249_hold'
+        self.ejectsonfire = True
         self.ammosize = '5.56'
         self.firemode = 'auto'
         self.holdslow = 8
@@ -184,6 +191,7 @@ class AUG_A1 (Gun):
         self.ammo = self.capacity
         self.reload = 2.7
         self.holdimage = 'auga1_hold'
+        self.ejectsonfire = True
         self.ammosize = '5.56'
         self.firemode = 'auto'
         self.holdslow = 6
@@ -218,8 +226,10 @@ class Shotgun (Gun):
         
         c = CasingActor(self, PlayerActor.angle -90 + random.randint(-2,2), camera = PlayerActor.camera, center = m)
         #casings.append(c)
-
-        return pellets, (c,)
+        if self.ejectsonfire:
+            return pellets, (c,)
+        else:
+            return ((pellets, ))
 
 class M870 (Shotgun):
     def __init__(self):
@@ -233,6 +243,7 @@ class M870 (Shotgun):
         self.ammo = self.capacity
         self.reload = 2.7
         self.holdimage = 'm870_hold'
+        self.ejectsonfire = True
         self.bulletimage = 'pellet'
         self.caseimage = 'shell'
         self.ammosize = '12g'
@@ -256,6 +267,7 @@ class AA12 (Shotgun):
         self.ammo = self.capacity
         self.reload = 4.0
         self.holdimage = 'aa12_hold'
+        self.ejectsonfire = True
         self.bulletimage = 'pellet'
         self.caseimage = 'shell'
         self.ammosize = '12g'
@@ -278,7 +290,7 @@ class Grenade (Throwable):
     def __init__ (self):
         super().__init__()
         self.holdslow = 4
-        self.fuse = 2
+        self.fuse = 1
         self.holdimage = 'grenade_hold'
         self.chargeimage = 'grenade_charge'
         self.grenadeimage = 'grenade'
@@ -288,8 +300,8 @@ class Grenade (Throwable):
     
     def increasepower(self):
         if self.power < 20 and self.triggerHeld:
-            self.power += 3
-            clock.schedule(self.increasepower, .033)
+            self.power += 1
+            clock.schedule(self.increasepower, .1)
 
     def throw(self, PlayerActor):
     

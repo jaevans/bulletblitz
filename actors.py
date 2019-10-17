@@ -109,20 +109,22 @@ class GrenadeActor (ProjectileActor):
     
     def explode(self):
         self.image = self.explodeimage
-        clock.schedule(self.kill, 1)
+        clock.schedule(self.kill, .25)
 
 class PlayerActor(TurtleActor):
     def __init__ (self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.weapon = None
+        self.angle = angle
         
 class CasingActor(TurtleActor):
     def __init__ (self, gun, angle, *args, **kwargs):
         super().__init__(gun.caseimage , *args, **kwargs)
         self.angle = angle
-        self.moveangle = angle
+        self.moveangle = self.angle
         self.alive = True
         self.flying = True
+        self.moves = 0
 
     def killtimer(self):
         self.alive = False
@@ -131,9 +133,13 @@ class CasingActor(TurtleActor):
         self.flying = False
     
     def move(self):
-        self.x += 5 * math.cos(self.moveangle)
-        self.y -= 5 * math.sin(self.moveangle)
-        self.turnleft(15)
+        if self.moves == 0:
+            self.moveangle = random.randint(0,359)
+        self.moves += 1
+        the_angle = math.radians(self.moveangle)
+        self.x += .1 * math.cos(the_angle)
+        self.y -= .1 * math.sin(the_angle)
+        self.turnleft(15-math.sqrt(self.moves))
 
 class AmmoActor(TurtleActor):
     def __init__ (self, *args, **kwargs):

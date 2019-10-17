@@ -182,20 +182,27 @@ def update():
                 saveangle = PlayerActor.angle
                 PlayerActor.image = PlayerActor.weapon.chargeimage
                 if PlayerActor.weapon.power >= 0:
+                    PlayerActor.weapon.power = 10
                     PlayerActor.weapon.increasepower()
                 PlayerActor.angle = saveangle
             else:
                 # they released some button, but I don't know what
                 g = PlayerActor.weapon.throw(PlayerActor)
                 grenades.append(g)
-                pass
+                
         else:
             if mouse_buttons[mouse.LEFT]:
                 # The user is *holding* down the left button for at least 1 frame
-                pass
+                saveangle = PlayerActor.angle
+                PlayerActor.image = PlayerActor.weapon.chargeimage
+                PlayerActor.angle = saveangle
             else:
                 # the left mouse button is not pressed
-                pass
+                saveangle = PlayerActor.angle
+                PlayerActor.image = PlayerActor.weapon.holdimage
+                PlayerActor.angle = saveangle
+                if isinstance(PlayerActor.weapon, Throwable):
+                    PlayerActor.weapon.power = 0
     
     live_bullets = []
     live_casings = []
@@ -242,16 +249,14 @@ def update():
         for e in enemies:
             dist = e.distance_to(g.center)
             if dist < 32 and g.image == g.explodeimage:
-                e.hp -= 5
+                e.hp -= 15
         if g.alive == True:
             live_grenades.append(g)
     
     grenades = live_grenades
 
-
-
     for c in casings:
-        clock.schedule(c.stopfly, (random.randint(0,50)/1000) + .075+1)
+        clock.schedule(c.stopfly, (random.randint(0,50)/1000) + 1.0)
         if c.alive:
             live_casings.append(c)
         if c.flying:
@@ -267,13 +272,18 @@ def update():
         resetfire()
     if isinstance(PlayerActor.weapon, Gun):
         if PlayerActor.weapon.ammo == 0 and PlayerActor.weapon.reloadScheduled == False:
+                #if not PlayerActor.weapon.ejectsonfire:
+                 #   for i in range (PlayerActor.weapon.capacity):
+                  #      c = CasingActor(self, (PlayerActor.angle - 90.0) + random.randint(-2,2), camera = PlayerActor.camera, center = m)
+                   #     casings.append(c)
                 PlayerActor.weapon.reloadScheduled = True
                 clock.schedule(PlayerActor.weapon.doReload, PlayerActor.weapon.reload)
     
         if PlayerActor.weapon.triggerHeld == True and canFire == True and PlayerActor.weapon.ammo > 0:
-            b,c = PlayerActor.weapon.fire(PlayerActor)
-            bullets.extend(b)
-            casings.extend(c)
+            projectiles = PlayerActor.weapon.fire(PlayerActor)
+            bullets.extend(projectiles[0])
+            if len(projectiles) > 1:
+                casings.extend(projectiles[1])
             canFire = False
             clock.schedule(canResetFiretrue, round(60/PlayerActor.weapon.rpm, 2))
         
@@ -292,7 +302,8 @@ def draw():
     for b in bullets:
         b.draw()
     for c in casings:
-        c.draw()
+        if c.moves > 25:
+            c.draw()
     for g in grenades:
         g.draw()
     if pickup is not None:
@@ -316,6 +327,9 @@ def draw():
     ptext.draw('Ammo', center = (35, HEIGHT-50), color = '#c5c5c5', fontsize = 20 )
     ptext.draw('Reserve', center = (90, HEIGHT-50), color = '#c5c5c5', fontsize = 20)
     PlayerActor.draw()
+    for c in casings:
+        if c.moves <= 25:
+            c.draw()
     for e in enemies:
         e.draw()
 
