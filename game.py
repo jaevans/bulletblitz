@@ -29,6 +29,7 @@ class Camera(object):
 camera = Camera()
 PlayerActor = TurtleActor('mp412_hold', camera = camera)
 FloorActor = TurtleActor('floor', camera = camera)
+ObstacleActor = TurtleActor('box', camera = camera)
 bullets = []
 casings = []
 enemies = []
@@ -53,6 +54,7 @@ SPEED = 15
 mouse_buttons = [False] * (mouse.WHEEL_DOWN + 1)
 
 PlayerActor.pos = (WIDTH/2, HEIGHT/2)
+ObstacleActor.pos = (WIDTH-600, HEIGHT-600)
 
 def resetfire():
     global canFire
@@ -168,12 +170,21 @@ def update():
 
     if keyboard[keys.W]:
         PlayerActor.y = max((PlayerActor.y - SPEED + PlayerActor.weapon.holdslow), FloorActor.top)
+        #r = pygame.rect.Rect(PlayerActor.topleft, (47, 47))
+        #if r.colliderect(ObstacleActor.__dict__['_actor']):
+         #   PlayerActor.y = min((PlayerActor.y + SPEED - PlayerActor.weapon.holdslow), FloorActor.bottom)
     if keyboard[keys.A]:
         PlayerActor.x = max((PlayerActor.x - SPEED + PlayerActor.weapon.holdslow), FloorActor.left)
+        #if PlayerActor.colliderect(ObstacleActor.__dict__['_actor']):
+         #   PlayerActor.x = min((PlayerActor.x + SPEED - PlayerActor.weapon.holdslow), FloorActor.right)
     if keyboard[keys.S]:
         PlayerActor.y = min((PlayerActor.y + SPEED - PlayerActor.weapon.holdslow), FloorActor.bottom)
+       # if PlayerActor.colliderect(ObstacleActor.__dict__['_actor']):
+           # PlayerActor.y = max((PlayerActor.y - SPEED + PlayerActor.weapon.holdslow), FloorActor.top)
     if keyboard[keys.D]:
         PlayerActor.x = min((PlayerActor.x + SPEED - PlayerActor.weapon.holdslow), FloorActor.right)
+       # if PlayerActor.colliderect(ObstacleActor.__dict__['_actor']):
+          #  PlayerActor.x = max((PlayerActor.x - SPEED + PlayerActor.weapon.holdslow), FloorActor.left)
     if isinstance(PlayerActor.weapon, Throwable):
         if triggertemp == True:
             # If the user just pressed/released the mouse
@@ -297,6 +308,7 @@ def update():
 def draw():
     screen.fill('white')
     FloorActor.draw()
+   # ObstacleActor.draw()
     if gunitem is not None:
         gunitem.draw()
     for b in bullets:
@@ -321,7 +333,8 @@ def draw():
         else: 
             ptext.draw(str(PlayerActor.weapon.reserve), center = (90, HEIGHT-25), color = '#c5c5c5', fontsize = 20)
     else:
-        ptext.draw(str(PlayerActor.weapon.power), center = (90, HEIGHT-25), color = '#c5c5c5', fontsize = 20)
+        pass
+        #ptext.draw(str(PlayerActor.weapon.power), center = (90, HEIGHT-25), color = '#c5c5c5', fontsize = 20)
     gname = getattr(PlayerActor.weapon, 'name', str(PlayerActor.weapon.__class__.__name__))
     ptext.draw(gname, center = (55, HEIGHT-75), color = '#c5c5c5', fontsize = 20)
     ptext.draw('Ammo', center = (35, HEIGHT-50), color = '#c5c5c5', fontsize = 20 )

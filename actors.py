@@ -137,8 +137,8 @@ class CasingActor(TurtleActor):
             self.moveangle = random.randint(0,359)
         self.moves += 1
         the_angle = math.radians(self.moveangle)
-        self.x += .1 * math.cos(the_angle)
-        self.y -= .1 * math.sin(the_angle)
+        self.x += .5 * math.cos(the_angle)
+        self.y -= .5 * math.sin(the_angle)
         self.turnleft(15-math.sqrt(self.moves))
 
 class AmmoActor(TurtleActor):
@@ -155,3 +155,7 @@ class EnemyActor(TurtleActor):
     def __init__ (self, etype = None, *args, **kwargs):
         super().__init__('zombie_1', *args, **kwargs)
         self.hp = 100
+
+class ObstacleActor(TurtleActor):
+    def __init__ (self, *args, **kwargs):
+        super().__init__('box', *args, **kwargs)
